@@ -7,12 +7,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
 
-import com.asan.bletrack.StaticResources;
-import com.asan.bletrack.databinding.ActivityPasswordBinding;
+import com.example.asan_sensor.StaticResources;
+import com.example.asan_sensor.databinding.ActivityPasswordBinding;
 
 public class PasswordActivity extends Activity {
     private EditText pw;
-    private com.asan.bletrack.databinding.ActivityPasswordBinding binding;
+    private com.example.asan_sensor.databinding.ActivityPasswordBinding binding;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

@@ -1,5 +1,6 @@
 package com.example.asan_sensor;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -23,8 +24,8 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.asan.bletrack.dto.BeaconSignal;
-import com.asan.bletrack.dto.WatchItem;
+import com.example.asan_sensor.dto.BeaconSignal;
+import com.example.asan_sensor.dto.WatchItem;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
@@ -140,6 +141,7 @@ public class WatchForegroundService extends Service{
 
     }
 
+    @SuppressLint("ForegroundServiceType")
     void foregroundNotification() { // foreground 실행 후 신호 전달 (안하면 앱 강제종료 됨)
         NotificationCompat.Builder builder;
 

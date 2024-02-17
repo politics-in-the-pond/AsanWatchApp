@@ -6,8 +6,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.asan.bletrack.StaticResources;
-import com.asan.bletrack.databinding.ActivitySettingBinding;
+import com.example.asan_sensor.StaticResources;
+import com.example.asan_sensor.databinding.ActivitySettingBinding;
 
 public class SettingActivity extends Activity {
     private EditText URL;

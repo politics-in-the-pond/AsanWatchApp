@@ -10,18 +10,18 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.asan.bletrack.Ping;
-import com.asan.bletrack.R;
-import com.asan.bletrack.SettingsLoader;
-import com.asan.bletrack.StaticResources;
-import com.asan.bletrack.WatchForegroundService;
-import com.asan.bletrack.databinding.ActivityMainBinding;
-import com.asan.bletrack.dto.DeviceInfo;
+import com.example.asan_sensor.Ping;
+import com.example.asan_sensor.R;
+import com.example.asan_sensor.SettingsLoader;
+import com.example.asan_sensor.StaticResources;
+import com.example.asan_sensor.WatchForegroundService;
+import com.example.asan_sensor.databinding.ActivityMaintempBinding;
+import com.example.asan_sensor.dto.DeviceInfo;
 
 public class MainTempActivity extends Activity {
 
     private TextView deviceidText;
-    private ActivityMainBinding binding;
+    private ActivityMaintempBinding binding;
     private Intent foregroundService;
     private ImageView setting;
     private ImageView network;
@@ -57,7 +57,7 @@ public class MainTempActivity extends Activity {
     }
 
     protected void UIBind(){
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        binding = ActivityMaintempBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         deviceidText = binding.deviceid;

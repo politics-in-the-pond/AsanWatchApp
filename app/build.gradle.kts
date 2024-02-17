@@ -74,4 +74,13 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.6.0")
+    implementation("org.apache.commons:commons-math3:3.6.1")
+    implementation("com.android.volley:volley:1.2.1")
+    implementation("org.altbeacon:android-beacon-library:2+")
+    implementation("androidx.wear:wear:1.2.0")
+    implementation("androidx.legacy:legacy-support-v4:1.0.0")
+    implementation("androidx.percentlayout:percentlayout:1.0.0")
+
 }
