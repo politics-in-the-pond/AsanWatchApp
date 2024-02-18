@@ -24,6 +24,7 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.asan_sensor.activities.MenuActivity;
 import com.example.asan_sensor.dto.BeaconSignal;
 import com.example.asan_sensor.dto.WatchItem;
 
@@ -81,7 +82,7 @@ public class WatchForegroundService extends Service{
         HashMap<String, Kalman> kalmanmap = new HashMap<String, Kalman>();
 
         NotificationCompat.Builder builder;
-        Intent notificationIntent = new Intent(this, MainActivity.class);
+        Intent notificationIntent = new Intent(this, MenuActivity.class);
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
@@ -145,7 +146,7 @@ public class WatchForegroundService extends Service{
     void foregroundNotification() { // foreground 실행 후 신호 전달 (안하면 앱 강제종료 됨)
         NotificationCompat.Builder builder;
 
-        Intent notificationIntent = new Intent(this, MainActivity.class);
+        Intent notificationIntent = new Intent(this, MenuActivity.class);
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 

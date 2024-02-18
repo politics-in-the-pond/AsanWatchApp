@@ -1,4 +1,4 @@
-package com.example.asan_sensor
+package com.example.asan_sensor.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,8 +8,10 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.asan_sensor.R
+import com.example.asan_sensor.SensorService
 
-class MainActivity : AppCompatActivity(), View.OnClickListener {
+class MenuActivity : AppCompatActivity(), View.OnClickListener {
 
     //private var sensorService: SensorService = SensorService()
     private var isMeasuring: Boolean = false // 측정 중인지 여부를 나타내는 플래그 변수

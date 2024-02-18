@@ -1,6 +1,9 @@
-package com.example.asan_sensor
+package com.example.asan_sensor.activities
 
 import android.content.Intent
+import android.content.SharedPreferences
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.preference.PreferenceManager
@@ -9,11 +12,13 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import com.example.asan_sensor.R
+import com.example.asan_sensor.SensorService
 
 class SettingsMainActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -25,7 +30,7 @@ class SettingsMainActivity : AppCompatActivity(), View.OnClickListener {
             "심박수", "광센서", "가속도 센서", "자이로 센서", "바로미터 센서"
         )
     }
-
+    lateinit var preferences: SharedPreferences
     private lateinit var acchzButton: Button
     private lateinit var gyrohzButton: Button
     private lateinit var saveButton: Button
@@ -34,9 +39,6 @@ class SettingsMainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings_main)
-
-        val settingsButton: ImageButton = findViewById(R.id.settings)
-        settingsButton.setOnClickListener(this)
 
         acchzButton = findViewById(R.id.sensors)
         acchzButton.text = "가속도 센서 Hz : ${SettingsManager.hzValueAccelerometer}"
@@ -53,7 +55,7 @@ class SettingsMainActivity : AppCompatActivity(), View.OnClickListener {
         resetButton.setOnClickListener(this)
 
         // Load saved values
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        preferences = PreferenceManager.getDefaultSharedPreferences(this)
         SettingsManager.hzValueAccelerometer = preferences.getString("hzValueAccelrometer", "3")!!
         SettingsManager.hzValueGyroscope = preferences.getString("hzValueGyroscope", "3")!!
 
@@ -70,9 +72,16 @@ class SettingsMainActivity : AppCompatActivity(), View.OnClickListener {
 
             R.id.sensors -> {
                 Log.d("SettingsMainActivity", "AccHz 버튼이 클릭되었습니다.")
+                var text: TextView = TextView(this)
+                text.setPadding(0, 100, 0, 0)
+                text.setText("가속도 센서 Hz 변환 값 입력")
                 val hzInputDialog = EditText(this)
+                hzInputDialog.setHint("값을 입력해주세요.")
+                hzInputDialog.setText(preferences.getString("hzValueAccelrometer", "3")!!)
+                hzInputDialog.setTextColor(Color.WHITE)
+                hzInputDialog.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE))
                 val hzDialog = AlertDialog.Builder(this)
-                    .setTitle("가속도 센서 Hz 변환 값 입력")
+                    .setCustomTitle(text)
                     .setView(hzInputDialog)
                     .setPositiveButton("OK") { dialog, which ->
                         var hzValueAccelrometer = hzInputDialog.text.toString()
@@ -93,8 +102,16 @@ class SettingsMainActivity : AppCompatActivity(), View.OnClickListener {
 
             R.id.hz -> {
                 Log.d("SettingsMainActivity", "GyroHz 버튼이 클릭되었습니다.")
+                var text: TextView = TextView(this)
+                text.setPadding(0, 100, 0, 0)
+                text.setText("가속도 센서 Hz 변환 값 입력")
                 val hzInputDialog = EditText(this)
+                hzInputDialog.setHint("값을 입력해주세요.")
+                hzInputDialog.setText(preferences.getString("hzValueGyroscope", "3")!!)
+                hzInputDialog.setTextColor(Color.WHITE)
+                hzInputDialog.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE))
                 val hzDialog = AlertDialog.Builder(this)
+                    .setCustomTitle(text)
                     .setTitle("자이로 센서 Hz 변환 값 입력")
                     .setView(hzInputDialog)
                     .setPositiveButton("OK") { dialog, which ->

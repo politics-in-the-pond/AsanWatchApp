@@ -10,6 +10,7 @@ import android.hardware.SensorManager
 import android.net.wifi.WifiManager
 import android.os.IBinder
 import android.util.Log
+import com.example.asan_sensor.activities.SettingsMainActivity
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress

@@ -33,7 +33,7 @@ public class PasswordActivity extends Activity {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if(Integer.parseInt(charSequence.toString())== StaticResources.password){
-                    Intent stintent = new Intent(PasswordActivity.this, SettingActivity.class);
+                    Intent stintent = new Intent(PasswordActivity.this, MenuActivity.class);
                     startActivity(stintent);
                     finish();
                 }

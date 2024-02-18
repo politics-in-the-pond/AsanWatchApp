@@ -1,5 +1,7 @@
-package com.example.asan_sensor
+package com.example.asan_sensor.activities
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
@@ -7,9 +9,11 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.example.asan_sensor.R
 
 class ServerMainActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -71,8 +75,12 @@ class ServerMainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun showInputDialog(title: String, hint: String, button: Button) {
         val inputDialog = EditText(this)
+        inputDialog.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE))
+        var text: TextView = TextView(this)
+        text.setPadding(0, 100, 0, 0)
+        text.setText(title)
         val dialog = AlertDialog.Builder(this)
-            .setTitle(title)
+            .setCustomTitle(text)
             .setView(inputDialog)
             .setPositiveButton("확인") { _, _ ->
                 val input = inputDialog.text.toString()
