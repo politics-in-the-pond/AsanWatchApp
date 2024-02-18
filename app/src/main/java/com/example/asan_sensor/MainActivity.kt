@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         sensorintent = Intent(this, SensorService::class.java)
 
         // 로고 버튼 클릭 이벤트 등록
-        val logoButton: ImageButton = findViewById(R.id.settings)
+        val logoButton: ImageView = findViewById(R.id.settings)
         logoButton.setOnClickListener(this)
 
         // 사용자 정보 버튼 클릭 이벤트 등록
