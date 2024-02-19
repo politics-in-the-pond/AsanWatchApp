@@ -53,17 +53,17 @@ class SensorService : Service(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event != null) {
             val sensorName = getSensorName(event.sensor.type)
+            val data = event.values
             val sensorData = processSensorData(event)
 
             if (sensorData != null) {
-                logSensorData(sensorName, sensorData)
+                logSensorData(sensorName, data)
                 sendData(sensorData)
             } else {
                 Log.e(TAG, "Failed to process sensor data.")
             }
         }
     }
-
 
     private fun getSensorName(sensorType: Int): String {
         return when (sensorType) {
@@ -76,18 +76,25 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    private fun logSensorData(sensorName: String, sensorData: ByteBuffer) {
-        val sensorType = sensorData.int
-        val sensorValue: String
+    private fun logSensorData(sensorName: String, sensorData: FloatArray) {
+        var sensorValue: String = ""
 
-        sensorValue = when (sensorType) {
-            Sensor.TYPE_HEART_RATE, Sensor.TYPE_STEP_COUNTER, Sensor.TYPE_SIGNIFICANT_MOTION -> {
-                val sensorValue = sensorData
-                sensorValue.toString()
+        sensorValue = when (sensorName) {
+            "심박수", "광센서", "바로미터 센서" -> {
+                // For sensors like heart rate, light, and pressure, we read a single int value
+                val sensorIntValue = sensorData[0]
+                sensorIntValue.toString()
+            }
+            "가속도 센서", "자이로 센서" -> {
+                // For sensors like accelerometer and gyroscope, we read 3 float values (x, y, z)
+                val xValue = sensorData[0]
+                val yValue = sensorData[1]
+                val zValue = sensorData[2]
+                "X: $xValue, Y: $yValue, Z: $zValue"
             }
             else -> {
-                val sensorValue = sensorData
-                sensorValue.toString()
+                // For other sensor types, we simply convert the ByteBuffer to string
+                sensorData.toString()
             }
         }
 
