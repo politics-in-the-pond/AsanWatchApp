@@ -1,5 +1,6 @@
 package com.example.asan_sensor.activities
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
@@ -14,6 +15,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.asan_sensor.R
+import com.example.asan_sensor.SensorService
 
 class ServerMainActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -22,8 +24,10 @@ class ServerMainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var saveButton: Button
     private lateinit var disconnectButton: Button
 
-    private lateinit var serverIpAddress: String
-    private var serverPort: Int = 0
+    object serverManager{
+        var serverIpAddress = "210.102.172.186"
+        var serverPort: Int = 8080
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,34 +104,49 @@ class ServerMainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun loadServerInfo() {
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        serverIpAddress = preferences.getString("serverIpAddress", "-") ?: ""
-        serverPort = preferences.getInt("serverPort", 0)
+        serverManager.serverIpAddress = preferences.getString("serverIpAddress", "-") ?: ""
+        serverManager.serverPort = preferences.getInt("serverPort", 0)
+        Log.d("서버 정보 확인", "${serverManager.serverIpAddress} : ${serverManager.serverPort}")
 
-        ipButton.text = serverIpAddress
-        portButton.text = serverPort.toString()
+        ipButton.text = serverManager.serverIpAddress
+        portButton.text = serverManager.serverPort.toString()
     }
 
     private fun saveServerInfo() {
         val ipAddress = ipButton.text.toString()
         val portNumber = portButton.text.toString()
 
+        // Save server info to SharedPreferences
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val editor = preferences.edit()
         editor.putString("serverIpAddress", ipAddress)
         editor.putInt("serverPort", portNumber.toInt())
         editor.apply()
+
+        // Send selected sensors to SensorService
+        sendServerInfoToService(ipAddress, portNumber.toInt())
+
+        Toast.makeText(this, "서버 정보가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+        finish()
+    }
+
+    private fun sendServerInfoToService(ipAddress: String, port: Int) {
+        val intent = Intent(this, SensorService::class.java)
+        intent.action = "UPDATE_SERVER_INFO"
+        intent.putExtra("serverIpAddress", ipAddress)
+        intent.putExtra("serverPort", port)
     }
 
     private fun resetServerInfo() {
-        ipButton.text = ""
-        portButton.text = ""
-        serverIpAddress = ""
-        serverPort = 0
+        ipButton.text = serverManager.serverIpAddress // 기본값 설정
+        portButton.text = serverManager.serverPort.toString() // 기본값 설정
+        serverManager.serverIpAddress = "210.102.172.186"
+        serverManager.serverPort = 8080
 
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val editor = preferences.edit()
-        editor.remove("serverIpAddress")
-        editor.remove("serverPort")
+        editor.putString("serverIpAddress", serverManager.serverIpAddress) // 기본값 설정
+        editor.putInt("serverPort", serverManager.serverPort) // 기본값 설정
         editor.apply()
     }
 }
