@@ -9,7 +9,6 @@ import android.hardware.SensorManager
 import android.net.wifi.WifiManager
 import android.os.IBinder
 import android.util.Log
-import com.example.asan_sensor.activities.ServerMainActivity
 import com.example.asan_sensor.activities.SettingsMainActivity
 import com.example.asan_sensor.socket.WebSocketStompClient
 import org.json.JSONObject
@@ -52,55 +51,15 @@ class SensorService : Service(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event != null) {
-            val sensorName = getSensorName(event.sensor.type)
             val sensorType = event.sensor.type
-            val data = event.values
             val sensorData = processSensorData(event)
 
             if (sensorData != null) {
-                logSensorData(sensorName, data)
                 sendData(event, sensorType)
             } else {
                 Log.e(TAG, "Failed to process sensor data.")
             }
         }
-    }
-
-    private fun getSensorName(sensorType: Int): String {
-        return when (sensorType) {
-            Sensor.TYPE_HEART_RATE -> "심박수"
-            Sensor.TYPE_ACCELEROMETER -> "가속도 센서"
-            Sensor.TYPE_LIGHT -> "광센서"
-            Sensor.TYPE_GYROSCOPE -> "자이로 센서"
-            Sensor.TYPE_PRESSURE -> "바로미터 센서"
-            else -> "알 수 없는 센서"
-        }
-    }
-
-    private fun logSensorData(sensorName: String, sensorData: FloatArray) {
-        var sensorValue: String = ""
-
-        sensorValue = when (sensorName) {
-            "심박수", "광센서", "바로미터 센서" -> {
-                // For sensors like heart rate, light, and pressure, we read a single int value
-                val sensorIntValue = sensorData[0]
-                sensorIntValue.toString()
-            }
-            "가속도 센서", "자이로 센서" -> {
-                // For sensors like accelerometer and gyroscope, we read 3 float values (x, y, z)
-                val xValue = sensorData[0]
-                val yValue = sensorData[1]
-                val zValue = sensorData[2]
-                "X: $xValue, Y: $yValue, Z: $zValue"
-            }
-            else -> {
-                // For other sensor types, we simply convert the ByteBuffer to string
-                sensorData.toString()
-            }
-        }
-
-        // Log the sensor data
-        Log.d(TAG, "Sensor: $sensorName, Data: $sensorValue")
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
@@ -138,44 +97,44 @@ class SensorService : Service(), SensorEventListener {
             try {
                 // Create data objects based on sensor type
                 when (sensorType) {
-                    Sensor.TYPE_HEART_RATE -> {
-                        val result_json = JSONObject()
-                        result_json.put("value", sensorEvent.values[0])
-                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
-                        webSocketStompClient?.sendHeartrate(result_json)
-                    }
+//                    Sensor.TYPE_HEART_RATE -> {
+//                        val result_json = JSONObject()
+//                        result_json.put("value", sensorEvent.values[0])
+//                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+//                        webSocketStompClient?.sendHeartrate(result_json)
+//                    }
 
                     Sensor.TYPE_ACCELEROMETER -> {
                         val result_json = JSONObject()
                         result_json.put("accX", sensorEvent.values[0])
                         result_json.put("accY", sensorEvent.values[1])
                         result_json.put("accZ", sensorEvent.values[2])
-                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
                         webSocketStompClient?.sendAccelerometer(result_json)
                     }
 
-                    Sensor.TYPE_LIGHT -> {
-                        val result_json = JSONObject()
-                        result_json.put("value", sensorEvent.values[0])
-                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
-                        webSocketStompClient?.sendLight(result_json)
-                    }
-
-                    Sensor.TYPE_GYROSCOPE -> {
-                        val result_json = JSONObject()
-                        result_json.put("gyroX", sensorEvent.values[0])
-                        result_json.put("gyroY", sensorEvent.values[1])
-                        result_json.put("gyroZ", sensorEvent.values[2])
-                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
-                        webSocketStompClient?.sendGyroscope(result_json)
-                    }
-
-                    Sensor.TYPE_PRESSURE -> {
-                        val result_json = JSONObject()
-                        result_json.put("value", sensorEvent.values[0])
-                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
-                        webSocketStompClient?.sendPressure(result_json)
-                    }
+//                    Sensor.TYPE_LIGHT -> {
+//                        val result_json = JSONObject()
+//                        result_json.put("value", sensorEvent.values[0])
+//                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+//                        webSocketStompClient?.sendLight(result_json)
+//                    }
+//
+//                    Sensor.TYPE_GYROSCOPE -> {
+//                        val result_json = JSONObject()
+//                        result_json.put("gyroX", sensorEvent.values[0])
+//                        result_json.put("gyroY", sensorEvent.values[1])
+//                        result_json.put("gyroZ", sensorEvent.values[2])
+//                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+//                        webSocketStompClient?.sendGyroscope(result_json)
+//                    }
+//
+//                    Sensor.TYPE_PRESSURE -> {
+//                        val result_json = JSONObject()
+//                        result_json.put("value", sensorEvent.values[0])
+//                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+//                        webSocketStompClient?.sendPressure(result_json)
+//                    }
 
                     else -> null
                 }
@@ -215,7 +174,7 @@ class SensorService : Service(), SensorEventListener {
                                 "자이로 센서" -> {
                                     samplingRateMsGyro
                                 }
-                                else -> SensorManager.SENSOR_DELAY_FASTEST
+                                else -> SensorManager.SENSOR_DELAY_NORMAL
                             }
                         )
 
