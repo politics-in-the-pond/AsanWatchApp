@@ -22,7 +22,16 @@ public class WebSocketStompClient {
 
     private StompClient stompClient;
     private List<StompHeader> headerList;
+    private static WebSocketStompClient webSocketStompClient = null;
 
+    // WebSocketStompClient singleton 패턴 적용
+    public static WebSocketStompClient getInstance(String watchId) {
+        if (webSocketStompClient == null)
+            return new WebSocketStompClient(watchId);
+        return webSocketStompClient;
+    }
+
+    // 기본 생성자
     public WebSocketStompClient(String watchId) {
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://" + StaticResources.ServerURL + ":" + StaticResources.port + "/ws");
         // Stomp 헤더에 Authorization 추가
@@ -39,6 +48,33 @@ public class WebSocketStompClient {
             String payload = jsonData.toString();
 
             stompClient.send("/app/position", payload)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new CompletableObserver() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                            // 구독 시작 시 필요한 작업 (옵션)
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            // 메시지 전송 성공 처리
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            // 메시지 전송 실패 처리
+                        }
+                    });
+        }
+    }
+
+    public void sendAccelerometer(JSONObject jsonData) {
+        if (stompClient != null && stompClient.isConnected()) {
+
+            String payload = jsonData.toString();
+
+            stompClient.send("/app/accelerometer", payload)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new CompletableObserver() {

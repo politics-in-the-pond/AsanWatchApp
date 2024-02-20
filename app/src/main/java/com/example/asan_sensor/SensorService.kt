@@ -12,6 +12,7 @@ import android.util.Log
 import com.example.asan_sensor.activities.ServerMainActivity
 import com.example.asan_sensor.activities.SettingsMainActivity
 import com.example.asan_sensor.socket.WebSocketStompClient
+import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.text.SimpleDateFormat
@@ -29,6 +30,7 @@ class SensorService : Service(), SensorEventListener {
     var serverPort: Int = ServerMainActivity.serverManager.serverPort
     private var selectedSensors = SettingsMainActivity.SettingsManager.selectedSensors
     private var webSocketStompClient: WebSocketStompClient? = null
+    private var watchId = ""
 
     data class HeartRateData(val value: Int, val timeStamp: String)
     data class AccelerometerData(val xValue: Float, val yValue: Float, val zValue: Float, val timeStamp: String)
@@ -48,6 +50,11 @@ class SensorService : Service(), SensorEventListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent != null && webSocketStompClient == null) {
+            this.watchId = intent.getStringExtra("watchId").toString();
+            webSocketStompClient = WebSocketStompClient.getInstance(watchId)
+        }
+
         startSensorMeasurement()
         return START_STICKY
     }
@@ -140,46 +147,45 @@ class SensorService : Service(), SensorEventListener {
             try {
                 // Create data objects based on sensor type
                 val data = when (sensorType) {
-                    Sensor.TYPE_HEART_RATE -> {
-                        val heartRateData = HeartRateData(
-                            value = sensorEvent.values[0].toInt(),
-                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-                        )
-                        heartRateData
-                        //Log.d("dkdkdkdkdkdk", heartRateData.toString())
-                    }
+//                    Sensor.TYPE_HEART_RATE -> {
+//                        val heartRateData = HeartRateData(
+//                            value = sensorEvent.values[0].toInt(),
+//                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+//                        )
+//                        heartRateData
+//                        //Log.d("dkdkdkdkdkdk", heartRateData.toString())
+//                    }
                     Sensor.TYPE_ACCELEROMETER -> {
-                        val accelerometerData = AccelerometerData(
-                            xValue = sensorEvent.values[0],
-                            yValue = sensorEvent.values[1],
-                            zValue = sensorEvent.values[2],
-                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-                        )
-                        accelerometerData
+                        val result_json = JSONObject()
+                        result_json.put("xValue", sensorEvent.values[0])
+                        result_json.put("yValue", sensorEvent.values[1])
+                        result_json.put("zValue", sensorEvent.values[2])
+                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        webSocketStompClient?.sendAccelerometer(result_json)
                     }
-                    Sensor.TYPE_LIGHT -> {
-                        val lightData = LightData(
-                            value = sensorEvent.values[0].toInt(),
-                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-                        )
-                        lightData
-                    }
-                    Sensor.TYPE_GYROSCOPE -> {
-                        val gyroscopeData = GyroscopeData(
-                            xValue = sensorEvent.values[0],
-                            yValue = sensorEvent.values[1],
-                            zValue = sensorEvent.values[2],
-                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-                        )
-                        gyroscopeData
-                    }
-                    Sensor.TYPE_PRESSURE -> {
-                        val pressureData = PressureData(
-                            value = sensorEvent.values[0],
-                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-                        )
-                        pressureData
-                    }
+//                    Sensor.TYPE_LIGHT -> {
+//                        val lightData = LightData(
+//                            value = sensorEvent.values[0].toInt(),
+//                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+//                        )
+//                        lightData
+//                    }
+//                    Sensor.TYPE_GYROSCOPE -> {
+//                        val gyroscopeData = GyroscopeData(
+//                            xValue = sensorEvent.values[0],
+//                            yValue = sensorEvent.values[1],
+//                            zValue = sensorEvent.values[2],
+//                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+//                        )
+//                        gyroscopeData
+//                    }
+//                    Sensor.TYPE_PRESSURE -> {
+//                        val pressureData = PressureData(
+//                            value = sensorEvent.values[0],
+//                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+//                        )
+//                        pressureData
+//                    }
                     else -> null
                 }
             } catch (e: Exception) {

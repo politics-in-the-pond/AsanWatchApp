@@ -73,10 +73,15 @@ public class WatchForegroundService extends Service{
 
         if (intent != null && webSocketStompClient == null) {
             this.watchId = intent.getStringExtra("watchId");
-            webSocketStompClient = new WebSocketStompClient(watchId);
+            webSocketStompClient = WebSocketStompClient.getInstance(watchId);
         }
 
         return START_STICKY;
+    }
+
+    // 필요시 사용
+    public WebSocketStompClient getWebSocketStompClient(String watchId) {
+        return this.webSocketStompClient;
     }
 
     void initBeaconManager(){
