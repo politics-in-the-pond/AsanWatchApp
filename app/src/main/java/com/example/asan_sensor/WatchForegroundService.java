@@ -76,7 +76,6 @@ public class WatchForegroundService extends Service{
             webSocketStompClient = new WebSocketStompClient(watchId);
         }
 
-
         return START_STICKY;
     }
 
@@ -185,7 +184,6 @@ public class WatchForegroundService extends Service{
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-
     private void performBackgroundTask(HashMap<String, Double> beaconDataMap) {
 
 
@@ -260,6 +258,4 @@ public class WatchForegroundService extends Service{
 
         requestQueue.add(stringRequest);
     }
-
-
 }

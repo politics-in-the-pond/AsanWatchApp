@@ -1,7 +1,6 @@
 package com.example.asan_sensor
 
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -12,14 +11,12 @@ import android.os.IBinder
 import android.util.Log
 import com.example.asan_sensor.activities.ServerMainActivity
 import com.example.asan_sensor.activities.SettingsMainActivity
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
+import com.example.asan_sensor.socket.WebSocketStompClient
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import org.json.JSONObject
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class SensorService : Service(), SensorEventListener {
 
@@ -31,6 +28,14 @@ class SensorService : Service(), SensorEventListener {
     var serverIpAddress = ServerMainActivity.serverManager.serverIpAddress
     var serverPort: Int = ServerMainActivity.serverManager.serverPort
     private var selectedSensors = SettingsMainActivity.SettingsManager.selectedSensors
+    private var webSocketStompClient: WebSocketStompClient? = null
+
+    data class HeartRateData(val value: Int, val timeStamp: String)
+    data class AccelerometerData(val xValue: Float, val yValue: Float, val zValue: Float, val timeStamp: String)
+    data class LightData(val value: Int, val timeStamp: String)
+    data class GyroscopeData(val xValue: Float, val yValue: Float, val zValue: Float, val timeStamp: String)
+    data class PressureData(val value: Float, val timeStamp: String)
+
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -133,125 +138,54 @@ class SensorService : Service(), SensorEventListener {
     private fun sendData(sensorEvent: SensorEvent, sensorType: Int) {
         Thread {
             try {
-                val address = InetAddress.getByName(serverIpAddress)
-                val socket = DatagramSocket()
-
-                // Create JSON object based on sensor type
-                val sensorDataJson = when (sensorType) {
-                    Sensor.TYPE_HEART_RATE -> createHeartRateJson(sensorEvent)
-                    Sensor.TYPE_ACCELEROMETER -> createAccelerometerJson(sensorEvent)
-                    Sensor.TYPE_LIGHT -> createLightJson(sensorEvent)
-                    Sensor.TYPE_GYROSCOPE -> createGyroscopeJson(sensorEvent)
-                    Sensor.TYPE_PRESSURE -> createPressureJson(sensorEvent)
+                // Create data objects based on sensor type
+                val data = when (sensorType) {
+                    Sensor.TYPE_HEART_RATE -> {
+                        val heartRateData = HeartRateData(
+                            value = sensorEvent.values[0].toInt(),
+                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                        )
+                        heartRateData
+                        //Log.d("dkdkdkdkdkdk", heartRateData.toString())
+                    }
+                    Sensor.TYPE_ACCELEROMETER -> {
+                        val accelerometerData = AccelerometerData(
+                            xValue = sensorEvent.values[0],
+                            yValue = sensorEvent.values[1],
+                            zValue = sensorEvent.values[2],
+                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                        )
+                        accelerometerData
+                    }
+                    Sensor.TYPE_LIGHT -> {
+                        val lightData = LightData(
+                            value = sensorEvent.values[0].toInt(),
+                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                        )
+                        lightData
+                    }
+                    Sensor.TYPE_GYROSCOPE -> {
+                        val gyroscopeData = GyroscopeData(
+                            xValue = sensorEvent.values[0],
+                            yValue = sensorEvent.values[1],
+                            zValue = sensorEvent.values[2],
+                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                        )
+                        gyroscopeData
+                    }
+                    Sensor.TYPE_PRESSURE -> {
+                        val pressureData = PressureData(
+                            value = sensorEvent.values[0],
+                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                        )
+                        pressureData
+                    }
                     else -> null
-                }
-
-                sensorDataJson?.let { jsonData ->
-                    val packet = DatagramPacket(jsonData.toByteArray(), jsonData.length, address, serverPort)
-                    socket.send(packet)
-                    socket.close()
-                } ?: run {
-                    Log.e(TAG, "Invalid sensor type.")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }.start()
-    }
-
-    private fun createHeartRateJson(sensorEvent: SensorEvent): String {
-        val heartRate = sensorEvent.values[0].toInt() // Assuming heart rate is an integer
-        val timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-        Log.d("잘 나오고 있니? 심박수", "Heart Rate: $heartRate")
-
-        val jsonObject = JSONObject()
-        jsonObject.put("messageType", "HEART_RATE")
-
-        val dataJson = JSONObject()
-        dataJson.put("value", heartRate)
-        dataJson.put("timeStamp", timeStamp)
-
-        jsonObject.put("data", dataJson)
-
-        return jsonObject.toString()
-    }
-
-    private fun createAccelerometerJson(sensorEvent: SensorEvent): String {
-        val xValue = sensorEvent.values[0]
-        val yValue = sensorEvent.values[1]
-        val zValue = sensorEvent.values[2]
-        val timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-
-        Log.d("잘 나오고 있니? 가속도 센서", "X: $xValue, Y: $yValue, Z: $zValue")
-
-        val jsonObject = JSONObject()
-        jsonObject.put("messageType", "ACCELEROMETER")
-
-        val dataJson = JSONObject()
-        dataJson.put("xValue", xValue)
-        dataJson.put("yValue", yValue)
-        dataJson.put("zValue", zValue)
-        dataJson.put("timeStamp", timeStamp)
-
-        jsonObject.put("data", dataJson)
-
-        return jsonObject.toString()
-    }
-
-    private fun createLightJson(sensorEvent: SensorEvent): String {
-        val light = sensorEvent.values[0].toInt()
-        val timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-
-        Log.d("잘 나오고 있니? : 조도센서", "$light")
-
-        val jsonObject = JSONObject()
-        jsonObject.put("messageType", "LIGHT")
-
-        val dataJson = JSONObject()
-        dataJson.put("value", light)
-        dataJson.put("timeStamp", timeStamp)
-
-        jsonObject.put("data", dataJson)
-
-        return jsonObject.toString()
-    }
-
-    private fun createGyroscopeJson(sensorEvent: SensorEvent): String {
-        val xValue = sensorEvent.values[0]
-        val yValue = sensorEvent.values[1]
-        val zValue = sensorEvent.values[2]
-        Log.d("잘 나오고 있니? 자이로스코프", "$xValue, $yValue, $zValue")
-        val timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-
-        val jsonObject = JSONObject()
-        jsonObject.put("messageType", "GYROSCOPE")
-
-        val dataJson = JSONObject()
-        dataJson.put("xValue", xValue)
-        dataJson.put("yValue", yValue)
-        dataJson.put("zValue", zValue)
-        dataJson.put("timeStamp", timeStamp)
-
-        jsonObject.put("data", dataJson)
-
-        return jsonObject.toString()
-    }
-
-    private fun createPressureJson(sensorEvent: SensorEvent): String {
-        val pressure = sensorEvent.values
-        val timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-        Log.d("잘 나오고 있니? : 기압센서", "$pressure")
-
-        val jsonObject = JSONObject()
-        jsonObject.put("messageType", "PRESSURE")
-
-        val dataJson = JSONObject()
-        dataJson.put("value", pressure)
-        dataJson.put("timeStamp", timeStamp)
-
-        jsonObject.put("data", dataJson)
-
-        return jsonObject.toString()
     }
 
     fun startSensorMeasurement() {
