@@ -147,14 +147,13 @@ class SensorService : Service(), SensorEventListener {
             try {
                 // Create data objects based on sensor type
                 val data = when (sensorType) {
-//                    Sensor.TYPE_HEART_RATE -> {
-//                        val heartRateData = HeartRateData(
-//                            value = sensorEvent.values[0].toInt(),
-//                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-//                        )
-//                        heartRateData
-//                        //Log.d("dkdkdkdkdkdk", heartRateData.toString())
-//                    }
+                    Sensor.TYPE_HEART_RATE -> {
+                        val result_json = JSONObject()
+                        result_json.put("value", sensorEvent.values[0])
+                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        webSocketStompClient?.sendHeartrate(result_json)
+                    }
+
                     Sensor.TYPE_ACCELEROMETER -> {
                         val result_json = JSONObject()
                         result_json.put("xValue", sensorEvent.values[0])
@@ -163,29 +162,30 @@ class SensorService : Service(), SensorEventListener {
                         result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
                         webSocketStompClient?.sendAccelerometer(result_json)
                     }
-//                    Sensor.TYPE_LIGHT -> {
-//                        val lightData = LightData(
-//                            value = sensorEvent.values[0].toInt(),
-//                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-//                        )
-//                        lightData
-//                    }
-//                    Sensor.TYPE_GYROSCOPE -> {
-//                        val gyroscopeData = GyroscopeData(
-//                            xValue = sensorEvent.values[0],
-//                            yValue = sensorEvent.values[1],
-//                            zValue = sensorEvent.values[2],
-//                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-//                        )
-//                        gyroscopeData
-//                    }
-//                    Sensor.TYPE_PRESSURE -> {
-//                        val pressureData = PressureData(
-//                            value = sensorEvent.values[0],
-//                            timeStamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-//                        )
-//                        pressureData
-//                    }
+
+                    Sensor.TYPE_LIGHT -> {
+                        val result_json = JSONObject()
+                        result_json.put("value", sensorEvent.values[0])
+                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        webSocketStompClient?.sendLight(result_json)
+                    }
+
+                    Sensor.TYPE_GYROSCOPE -> {
+                        val result_json = JSONObject()
+                        result_json.put("xValue", sensorEvent.values[0])
+                        result_json.put("yValue", sensorEvent.values[1])
+                        result_json.put("zValue", sensorEvent.values[2])
+                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        webSocketStompClient?.sendGyroscope(result_json)
+                    }
+
+                    Sensor.TYPE_PRESSURE -> {
+                        val result_json = JSONObject()
+                        result_json.put("value", sensorEvent.values[0])
+                        result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        webSocketStompClient?.sendPressure(result_json)
+                    }
+
                     else -> null
                 }
             } catch (e: Exception) {

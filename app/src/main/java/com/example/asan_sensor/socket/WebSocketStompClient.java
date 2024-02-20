@@ -27,7 +27,7 @@ public class WebSocketStompClient {
     // WebSocketStompClient singleton 패턴 적용
     public static WebSocketStompClient getInstance(String watchId) {
         if (webSocketStompClient == null)
-            return new WebSocketStompClient(watchId);
+           webSocketStompClient = new WebSocketStompClient(watchId);
         return webSocketStompClient;
     }
 
@@ -42,7 +42,6 @@ public class WebSocketStompClient {
     }
 
     public void sendPositionData(JSONObject jsonData) {
-
         if (stompClient != null && stompClient.isConnected()) {
 
             String payload = jsonData.toString();
@@ -75,6 +74,114 @@ public class WebSocketStompClient {
             String payload = jsonData.toString();
 
             stompClient.send("/app/accelerometer", payload)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new CompletableObserver() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                            // 구독 시작 시 필요한 작업 (옵션)
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            // 메시지 전송 성공 처리
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            // 메시지 전송 실패 처리
+                        }
+                    });
+        }
+    }
+
+    public void sendHeartrate(JSONObject jsonData) {
+        if (stompClient != null && stompClient.isConnected()) {
+
+            String payload = jsonData.toString();
+
+            stompClient.send("/app/heart-rate", payload)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new CompletableObserver() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                            // 구독 시작 시 필요한 작업 (옵션)
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            // 메시지 전송 성공 처리
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            // 메시지 전송 실패 처리
+                        }
+                    });
+        }
+    }
+
+    public void sendGyroscope(JSONObject jsonData) {
+        if (stompClient != null && stompClient.isConnected()) {
+
+            String payload = jsonData.toString();
+
+            stompClient.send("/app/gyroscope", payload)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new CompletableObserver() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                            // 구독 시작 시 필요한 작업 (옵션)
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            // 메시지 전송 성공 처리
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            // 메시지 전송 실패 처리
+                        }
+                    });
+        }
+    }
+
+    public void sendPressure(JSONObject jsonData) {
+        if (stompClient != null && stompClient.isConnected()) {
+
+            String payload = jsonData.toString();
+
+            stompClient.send("/app/barometer", payload)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new CompletableObserver() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                            // 구독 시작 시 필요한 작업 (옵션)
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            // 메시지 전송 성공 처리
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            // 메시지 전송 실패 처리
+                        }
+                    });
+        }
+    }
+
+    public void sendLight(JSONObject jsonData) {
+        if (stompClient != null && stompClient.isConnected()) {
+
+            String payload = jsonData.toString();
+
+            stompClient.send("/app/light", payload)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new CompletableObserver() {
