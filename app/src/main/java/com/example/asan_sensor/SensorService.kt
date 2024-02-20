@@ -26,18 +26,9 @@ class SensorService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private lateinit var wifiManager: WifiManager
     private var isMeasuring: Boolean = false
-    var serverIpAddress = ServerMainActivity.serverManager.serverIpAddress
-    var serverPort: Int = ServerMainActivity.serverManager.serverPort
     private var selectedSensors = SettingsMainActivity.SettingsManager.selectedSensors
     private var webSocketStompClient: WebSocketStompClient? = null
     private var watchId = ""
-
-    data class HeartRateData(val value: Int, val timeStamp: String)
-    data class AccelerometerData(val xValue: Float, val yValue: Float, val zValue: Float, val timeStamp: String)
-    data class LightData(val value: Int, val timeStamp: String)
-    data class GyroscopeData(val xValue: Float, val yValue: Float, val zValue: Float, val timeStamp: String)
-    data class PressureData(val value: Float, val timeStamp: String)
-
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -146,7 +137,7 @@ class SensorService : Service(), SensorEventListener {
         Thread {
             try {
                 // Create data objects based on sensor type
-                val data = when (sensorType) {
+                when (sensorType) {
                     Sensor.TYPE_HEART_RATE -> {
                         val result_json = JSONObject()
                         result_json.put("value", sensorEvent.values[0])
@@ -156,9 +147,9 @@ class SensorService : Service(), SensorEventListener {
 
                     Sensor.TYPE_ACCELEROMETER -> {
                         val result_json = JSONObject()
-                        result_json.put("xValue", sensorEvent.values[0])
-                        result_json.put("yValue", sensorEvent.values[1])
-                        result_json.put("zValue", sensorEvent.values[2])
+                        result_json.put("accX", sensorEvent.values[0])
+                        result_json.put("accY", sensorEvent.values[1])
+                        result_json.put("accZ", sensorEvent.values[2])
                         result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
                         webSocketStompClient?.sendAccelerometer(result_json)
                     }
@@ -172,9 +163,9 @@ class SensorService : Service(), SensorEventListener {
 
                     Sensor.TYPE_GYROSCOPE -> {
                         val result_json = JSONObject()
-                        result_json.put("xValue", sensorEvent.values[0])
-                        result_json.put("yValue", sensorEvent.values[1])
-                        result_json.put("zValue", sensorEvent.values[2])
+                        result_json.put("gyroX", sensorEvent.values[0])
+                        result_json.put("gyroY", sensorEvent.values[1])
+                        result_json.put("gyroZ", sensorEvent.values[2])
                         result_json.put("yyyy-MM-dd HH:mm:ss", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
                         webSocketStompClient?.sendGyroscope(result_json)
                     }
