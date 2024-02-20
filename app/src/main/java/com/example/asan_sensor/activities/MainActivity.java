@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -74,6 +75,7 @@ public class MainActivity extends Activity {
         for(String permission : permissions){
             if(ContextCompat.checkSelfPermission(getApplicationContext(), permission)!=PackageManager.PERMISSION_GRANTED){
                 notGranted.add(permission);
+                Log.d("permission", permission);
             }
         }
 
