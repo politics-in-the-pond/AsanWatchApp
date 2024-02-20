@@ -24,9 +24,11 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.asan_sensor.activities.MenuActivity;
+import com.example.asan_sensor.activities.MainActivity;
 import com.example.asan_sensor.dto.BeaconSignal;
 import com.example.asan_sensor.dto.WatchItem;
+import com.example.asan_sensor.Kalman;
+import com.example.asan_sensor.socket.WebSocketStompClient;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
@@ -48,8 +50,9 @@ public class WatchForegroundService extends Service{
     private PowerManager.WakeLock wakeLock;
     private BeaconManager beaconManager;
     boolean is_started = false;
+    private WebSocketStompClient webSocketStompClient;
 
-
+    private String watchId = "";
 
     JSONObject one_beacon_json = new JSONObject();
     JSONObject result_json = new JSONObject();
@@ -68,6 +71,12 @@ public class WatchForegroundService extends Service{
         }
         is_started = true;
 
+        if (intent != null && webSocketStompClient == null) {
+            this.watchId = intent.getStringExtra("watchId");
+            webSocketStompClient = new WebSocketStompClient(watchId);
+        }
+
+
         return START_STICKY;
     }
 
@@ -75,14 +84,14 @@ public class WatchForegroundService extends Service{
         beaconManager = BeaconManager.getInstanceForApplication(this);
         beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
         beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
-        beaconManager.setBackgroundScanPeriod(5000);
+        beaconManager.setBackgroundScanPeriod(2000);
         beaconManager.setBackgroundBetweenScanPeriod(0);
-        beaconManager.setForegroundScanPeriod(5000);
+        beaconManager.setForegroundScanPeriod(2000);
         beaconManager.setForegroundBetweenScanPeriod(0);
         HashMap<String, Kalman> kalmanmap = new HashMap<String, Kalman>();
 
         NotificationCompat.Builder builder;
-        Intent notificationIntent = new Intent(this, MenuActivity.class);
+        Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
@@ -133,7 +142,7 @@ public class WatchForegroundService extends Service{
                     watchitem.item.add(tmp);
                 }
                 watchitem.deviceID = StaticResources.deviceID;
-                performBackgroundTask(StaticResources.ServerURL, String.valueOf((StaticResources.password)),beaconDataMap);
+                performBackgroundTask(beaconDataMap);
             }
         });
         beaconManager.enableForegroundServiceScanning(builder.build(), 456);
@@ -146,7 +155,7 @@ public class WatchForegroundService extends Service{
     void foregroundNotification() { // foreground 실행 후 신호 전달 (안하면 앱 강제종료 됨)
         NotificationCompat.Builder builder;
 
-        Intent notificationIntent = new Intent(this, MenuActivity.class);
+        Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
@@ -177,12 +186,8 @@ public class WatchForegroundService extends Service{
     }
 
 
-    private void performBackgroundTask(String serverAddress, String passwordText, HashMap<String, Double> beaconDataMap) {
-        String deviceid = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
-        String URL = serverAddress + "api/receiveData";
+    private void performBackgroundTask(HashMap<String, Double> beaconDataMap) {
 
-
-        Log.e("test",URL);
 
         JSONArray json_array = new JSONArray();
 
@@ -201,15 +206,21 @@ public class WatchForegroundService extends Service{
 
         try {
             result_json.put("beacon_data", json_array);
-            result_json.put("password", passwordText);
-            result_json.put("android_id", deviceid);
+            result_json.put("android_id", watchId);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
         // 서버와 통신
-        sendNetworkRequest(URL, result_json);
+        webSocketStompClient.sendPositionData(result_json);
 
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (webSocketStompClient != null) {
+            webSocketStompClient.disconnect();
+        }
     }
 
 
@@ -251,5 +262,4 @@ public class WatchForegroundService extends Service{
     }
 
 
-    }
-
+}

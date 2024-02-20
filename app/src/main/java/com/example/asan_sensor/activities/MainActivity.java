@@ -17,6 +17,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.android.volley.NetworkResponse;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.asan_sensor.Ping;
 import com.example.asan_sensor.R;
 import com.example.asan_sensor.SettingsLoader;
@@ -25,6 +32,10 @@ import com.example.asan_sensor.WatchForegroundService;
 import com.example.asan_sensor.databinding.ActivityMaintempBinding;
 import com.example.asan_sensor.dto.DeviceInfo;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class MainActivity extends Activity {
@@ -47,15 +58,16 @@ public class MainActivity extends Activity {
         UIBind();
         getPermission();
 
-        foregroundService = new Intent(this, WatchForegroundService.class);
-        foregroundService.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-        foregroundService.setData(Uri.parse("package:" + getPackageName()));
-        startForegroundService(foregroundService);
+        //foregroundService = new Intent(this, WatchForegroundService.class);
+        //foregroundService.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+        //foregroundService.setData(Uri.parse("package:" + getPackageName()));
+        //startForegroundService(foregroundService);
 
         String deviceid = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
         StaticResources.deviceID = deviceid;
         StaticResources.device = Build.MODEL;
         StaticResources.os = Build.VERSION.RELEASE;
+        getWatchid(deviceid);
         deviceidText.setText(deviceid);
     }
 
@@ -129,4 +141,128 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
     }
+
+    private void getWatchid(String deviceId) {
+
+        String URL = StaticResources.ServerURL + "api/watch/"+deviceId;
+        JSONObject json_object = new JSONObject();
+        try {
+            json_object.put("androidId", deviceId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        sendNetworkGetRequest(URL,json_object,deviceId);
+    }
+
+    protected void sendNetworkGetRequest(String URL, JSONObject jsonData, String androidId) {
+
+        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
+        String mRequestBody = jsonData.toString();
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, URL, response -> {
+            try {
+                JSONObject jsonResponse = new JSONObject(response);
+
+                int state = jsonResponse.getInt("status");
+                if (state == 200) {
+                    String watchId = jsonResponse.getJSONObject("data").getString("watchId");
+                    Log.d("WatchId", "Received watchId: " + watchId);
+
+                    Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
+                    intent.putExtra("watchId", watchId);
+                    startService(intent);
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                new android.os.Handler().postDelayed(() -> getWatchid(androidId), 5000);
+            }
+        }, error -> {
+            Log.e("NetworkError", error.toString());
+            registerWatch(androidId, StaticResources.device);
+            new android.os.Handler().postDelayed(() -> getWatchid(androidId), 5000);
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            @Override
+            public byte[] getBody() {
+                return mRequestBody.getBytes(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                String responseString = "";
+                if (response != null) {
+                    responseString = new String(response.data, StandardCharsets.UTF_8);
+                }
+                return Response.success(responseString, HttpHeaderParser.parseCacheHeaders(response));
+            }
+        };
+
+        requestQueue.add(stringRequest);
+    }
+
+    private void registerWatch(String deviceId, String device) {
+        String URL = StaticResources.ServerURL + "api/watch";
+        JSONObject json_object = new JSONObject();
+        try {
+            json_object.put("uuid", deviceId);
+            json_object.put("device", device);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        sendNetworkPostRequest(URL, json_object);
+    }
+
+    protected void sendNetworkPostRequest(String URL, JSONObject jsonData) {
+
+        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
+        String mRequestBody = jsonData.toString();
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, response -> {
+            try {
+                JSONObject jsonResponse = new JSONObject(response);
+
+                int state = jsonResponse.getInt("status");
+                if (state == 200) {
+                    String watchId = jsonResponse.getJSONObject("data").getString("watchId");
+                    Log.d("WatchId", "Received watchId: " + watchId);
+                    server.setImageResource(R.drawable.baseline_check_24);
+                    Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
+                    intent.putExtra("watchId", watchId);
+                    startService(intent);
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }, error -> {
+            Log.e("NetworkError", error.toString());
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            @Override
+            public byte[] getBody() {
+                return mRequestBody.getBytes(StandardCharsets.UTF_8);
+            }
+
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                String responseString = "";
+                if (response != null) {
+                    responseString = new String(response.data, StandardCharsets.UTF_8);
+                }
+                return Response.success(responseString, HttpHeaderParser.parseCacheHeaders(response));
+            }
+        };
+
+        requestQueue.add(stringRequest);
+    }
+
 }

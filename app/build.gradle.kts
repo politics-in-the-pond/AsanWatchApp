@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.asan_sensor"
-        minSdk = 30
+        minSdk = 28
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -49,6 +49,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
 }
 
 dependencies {
@@ -83,5 +84,8 @@ dependencies {
     implementation("androidx.wear:wear:1.2.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation("androidx.percentlayout:percentlayout:1.0.0")
+    implementation("io.reactivex.rxjava2:rxjava:2.2.5")
+    implementation("io.reactivex.rxjava2:rxandroid:2.1.0")
+    implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
 
 }
