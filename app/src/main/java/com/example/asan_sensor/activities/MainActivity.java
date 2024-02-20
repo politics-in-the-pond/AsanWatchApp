@@ -144,7 +144,7 @@ public class MainActivity extends Activity {
 
     private void getWatchid(String deviceId) {
 
-        String URL = StaticResources.ServerURL + "api/watch/"+deviceId;
+        String URL = "http://" + StaticResources.ServerURL + ":" + StaticResources.port + "/api/watch/"+deviceId;
         JSONObject json_object = new JSONObject();
         try {
             json_object.put("androidId", deviceId);
@@ -172,7 +172,7 @@ public class MainActivity extends Activity {
 
                     Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
                     intent.putExtra("watchId", watchId);
-                    startService(intent);
+                    startForegroundService(intent);
                 }
 
             } catch (JSONException e) {
@@ -208,7 +208,7 @@ public class MainActivity extends Activity {
     }
 
     private void registerWatch(String deviceId, String device) {
-        String URL = StaticResources.ServerURL + "api/watch";
+        String URL = "http://" + StaticResources.ServerURL + ":" + StaticResources.port + "/api/watch";
         JSONObject json_object = new JSONObject();
         try {
             json_object.put("uuid", deviceId);
@@ -234,7 +234,7 @@ public class MainActivity extends Activity {
                     Log.d("WatchId", "Received watchId: " + watchId);
                     Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
                     intent.putExtra("watchId", watchId);
-                    startService(intent);
+                    startForegroundService(intent);
                 }
 
             } catch (JSONException e) {

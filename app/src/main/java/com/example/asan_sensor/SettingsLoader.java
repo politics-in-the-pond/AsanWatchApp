@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 public class SettingsLoader {
     SharedPreferences pref = StaticResources.maincontext.getSharedPreferences("settings", Context.MODE_PRIVATE);
     public void getsettings(){
-        StaticResources.ServerURL = this.pref.getString("url", "http://210.102.178.186:8080/");
+        StaticResources.ServerURL = this.pref.getString("url", "210.102.178.186");
         StaticResources.password = this.pref.getInt("pw", 123);
     }
 
