@@ -3,6 +3,8 @@ package com.example.asan_sensor.socket;
 
 import android.util.Log;
 
+import com.example.asan_sensor.StaticResources;
+
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ public class WebSocketStompClient {
     private List<StompHeader> headerList;
 
     public WebSocketStompClient(String watchId) {
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://192.168.94.153:8080/ws");
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://" + StaticResources.ServerURL + ":" + StaticResources.port + "/ws");
         // Stomp 헤더에 Authorization 추가
         headerList=new ArrayList<>();
         headerList.add(new StompHeader("Authorization", watchId));

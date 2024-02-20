@@ -151,7 +151,7 @@ public class MainActivity extends Activity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        sendNetworkGetRequest(URL,json_object,deviceId);
+        sendNetworkGetRequest(URL, json_object, deviceId);
     }
 
     protected void sendNetworkGetRequest(String URL, JSONObject jsonData, String androidId) {
@@ -166,6 +166,8 @@ public class MainActivity extends Activity {
                 int state = jsonResponse.getInt("status");
                 if (state == 200) {
                     String watchId = jsonResponse.getJSONObject("data").getString("watchId");
+                    StaticResources.watchID = watchId;
+                    server.setImageResource(R.drawable.baseline_check_24);
                     Log.d("WatchId", "Received watchId: " + watchId);
 
                     Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
@@ -230,7 +232,6 @@ public class MainActivity extends Activity {
                 if (state == 200) {
                     String watchId = jsonResponse.getJSONObject("data").getString("watchId");
                     Log.d("WatchId", "Received watchId: " + watchId);
-                    server.setImageResource(R.drawable.baseline_check_24);
                     Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
                     intent.putExtra("watchId", watchId);
                     startService(intent);
