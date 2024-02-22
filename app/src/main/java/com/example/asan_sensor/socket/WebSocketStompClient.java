@@ -33,7 +33,7 @@ public class WebSocketStompClient {
 
     // 기본 생성자
     public WebSocketStompClient(String watchId) {
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://" + StaticResources.ServerURL + ":" + StaticResources.port + "/ws");
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, StaticResources.getWSURL());
         // Stomp 헤더에 Authorization 추가
         headerList=new ArrayList<>();
         headerList.add(new StompHeader("Authorization", watchId));

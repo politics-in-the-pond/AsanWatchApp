@@ -80,17 +80,16 @@ public class MainActivity extends Activity {
 
     protected void getPermission(){
         String[] permissions = {
-            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_BACKGROUND_LOCATION, Manifest.permission.FOREGROUND_SERVICE, Manifest.permission.BLUETOOTH, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_ADVERTISE
+            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.BODY_SENSORS
         };
 
         ArrayList<String> notGranted = new ArrayList<String>();
         for(String permission : permissions){
             if(ContextCompat.checkSelfPermission(getApplicationContext(), permission)!=PackageManager.PERMISSION_GRANTED){
                 notGranted.add(permission);
-                Log.d("permission", permission);
             }
         }
-        Log.d("permission", notGranted.toArray(new String[notGranted.size()])[0]);
+
         if(notGranted.size()>0)
             ActivityCompat.requestPermissions(this, notGranted.toArray(new String[notGranted.size()]), 29573);
     }
@@ -145,7 +144,7 @@ public class MainActivity extends Activity {
 
     private void getWatchid(String deviceId) {
 
-        String URL = "http://" + StaticResources.ServerURL + ":" + StaticResources.port + "/api/watch/"+deviceId;
+        String URL = StaticResources.getHttpURL() + "api/watch/"+deviceId;
         JSONObject json_object = new JSONObject();
         try {
             json_object.put("androidId", deviceId);
@@ -209,7 +208,7 @@ public class MainActivity extends Activity {
     }
 
     private void registerWatch(String deviceId, String device) {
-        String URL = "http://" + StaticResources.ServerURL + ":" + StaticResources.port + "/api/watch";
+        String URL = StaticResources.getHttpURL() + "api/watch";
         JSONObject json_object = new JSONObject();
         try {
             json_object.put("uuid", deviceId);
