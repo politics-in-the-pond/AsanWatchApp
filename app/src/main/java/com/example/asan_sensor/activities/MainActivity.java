@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
 
     protected void getPermission(){
         String[] permissions = {
-            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_BACKGROUND_LOCATION, Manifest.permission.FOREGROUND_SERVICE, Manifest.permission.BLUETOOTH
+            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_BACKGROUND_LOCATION, Manifest.permission.FOREGROUND_SERVICE, Manifest.permission.BLUETOOTH, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH_ADVERTISE
         };
 
         ArrayList<String> notGranted = new ArrayList<String>();
@@ -90,8 +90,9 @@ public class MainActivity extends Activity {
                 Log.d("permission", permission);
             }
         }
-
-        ActivityCompat.requestPermissions(this, notGranted.toArray(new String[notGranted.size()]), 100);
+        Log.d("permission", notGranted.toArray(new String[notGranted.size()])[0]);
+        if(notGranted.size()>0)
+            ActivityCompat.requestPermissions(this, notGranted.toArray(new String[notGranted.size()]), 29573);
     }
 
     protected void UIBind(){

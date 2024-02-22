@@ -12,4 +12,18 @@ public class StaticResources {
     public static String os = "";
     public static Context maincontext;
     public static SettingsLoader pref;
+
+    public static String getHttpURL(){
+        if(port.equals(""))
+            return "http://" + ServerURL + "/";
+        else
+            return "http://" + ServerURL + ":" + port + "/";
+    }
+
+    public static String getWSURL(){
+        if(port.equals(""))
+            return "ws://" + ServerURL + "/ws";
+        else
+            return "ws://" + ServerURL + ":" + port + "/ws";
+    }
 }

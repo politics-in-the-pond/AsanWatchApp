@@ -104,7 +104,7 @@ class SettingsMainActivity : AppCompatActivity(), View.OnClickListener {
                 Log.d("SettingsMainActivity", "GyroHz 버튼이 클릭되었습니다.")
                 var text: TextView = TextView(this)
                 text.setPadding(0, 100, 0, 0)
-                text.setText("가속도 센서 Hz 변환 값 입력")
+                text.setText("자이로 센서 Hz 변환 값 입력")
                 val hzInputDialog = EditText(this)
                 hzInputDialog.setHint("값을 입력해주세요.")
                 hzInputDialog.setText(preferences.getString("hzValueGyroscope", "3")!!)
