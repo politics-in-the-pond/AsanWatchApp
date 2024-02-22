@@ -97,12 +97,12 @@ class SensorService : Service(), SensorEventListener {
             try {
                 // Create data objects based on sensor type
                 when (sensorType) {
-//                    Sensor.TYPE_HEART_RATE -> {
-//                        val result_json = JSONObject()
-//                        result_json.put("value", sensorEvent.values[0])
-//                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
-//                        webSocketStompClient?.sendHeartrate(result_json)
-//                    }
+                    Sensor.TYPE_HEART_RATE -> {
+                        val result_json = JSONObject()
+                        result_json.put("value", sensorEvent.values[0])
+                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        webSocketStompClient?.sendHeartrate(result_json)
+                    }
 
                     Sensor.TYPE_ACCELEROMETER -> {
                         val result_json = JSONObject()
@@ -113,28 +113,28 @@ class SensorService : Service(), SensorEventListener {
                         webSocketStompClient?.sendAccelerometer(result_json)
                     }
 
-//                    Sensor.TYPE_LIGHT -> {
-//                        val result_json = JSONObject()
-//                        result_json.put("value", sensorEvent.values[0])
-//                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
-//                        webSocketStompClient?.sendLight(result_json)
-//                    }
-//
-//                    Sensor.TYPE_GYROSCOPE -> {
-//                        val result_json = JSONObject()
-//                        result_json.put("gyroX", sensorEvent.values[0])
-//                        result_json.put("gyroY", sensorEvent.values[1])
-//                        result_json.put("gyroZ", sensorEvent.values[2])
-//                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
-//                        webSocketStompClient?.sendGyroscope(result_json)
-//                    }
-//
-//                    Sensor.TYPE_PRESSURE -> {
-//                        val result_json = JSONObject()
-//                        result_json.put("value", sensorEvent.values[0])
-//                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
-//                        webSocketStompClient?.sendPressure(result_json)
-//                    }
+                    Sensor.TYPE_LIGHT -> {
+                        val result_json = JSONObject()
+                        result_json.put("value", sensorEvent.values[0])
+                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        webSocketStompClient?.sendLight(result_json)
+                    }
+
+                    Sensor.TYPE_GYROSCOPE -> {
+                        val result_json = JSONObject()
+                        result_json.put("gyroX", sensorEvent.values[0])
+                        result_json.put("gyroY", sensorEvent.values[1])
+                        result_json.put("gyroZ", sensorEvent.values[2])
+                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        webSocketStompClient?.sendGyroscope(result_json)
+                    }
+
+                    Sensor.TYPE_PRESSURE -> {
+                        val result_json = JSONObject()
+                        result_json.put("value", sensorEvent.values[0])
+                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        webSocketStompClient?.sendPressure(result_json)
+                    }
 
                     else -> null
                 }
