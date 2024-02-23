@@ -66,7 +66,7 @@ class SettingsMainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.settings -> {
+            R.id.server -> {
                 Log.d("SettingsMainActivity", "Settings 버튼이 클릭되었습니다.")
             }
 

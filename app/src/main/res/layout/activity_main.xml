@@ -25,7 +25,7 @@
                 android:layout_height="34dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="2dp"
-                android:background="@drawable/rounded_button"
+                android:background="@drawable/rounded_button_2"
                 android:text="사용자 정보" />
 
             <Button
@@ -34,25 +34,27 @@
                 android:layout_height="34dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="7dp"
-                android:background="@drawable/rounded_button"
-                android:text="서버 연결 정보" />
+                android:background="@drawable/rounded_button_2"
+                android:text="서버 연결 설정" />
 
             <Button
-                android:id="@+id/start"
-                android:layout_width="150dp"
+                android:id="@+id/settings"
+                android:layout_width="match_parent"
                 android:layout_height="34dp"
                 android:layout_gravity="center"
                 android:layout_marginTop="7dp"
-                android:background="@drawable/rounded_button"
+                android:background="@drawable/rounded_button_2"
+                android:text="센서 설정" />
+
+            <Button
+                android:id="@+id/start"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="7dp"
+                android:background="@drawable/rounded_button_2"
                 android:text="측정 시작" />
 
-            <ImageView
-                android:id="@+id/settings"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:src="@drawable/baseline_settings_24" />
         </LinearLayout>
     </FrameLayout>
 </androidx.wear.widget.BoxInsetLayout>

@@ -1,11 +1,13 @@
 package com.example.asan_sensor.activities
 
+import android.app.ActivityManager
+import android.app.ActivityManager.RunningServiceInfo
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.asan_sensor.R
@@ -17,6 +19,7 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
     private var isMeasuring: Boolean = false // 측정 중인지 여부를 나타내는 플래그 변수
 
     var sensorintent: Intent? = null
+    lateinit var startButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,7 +27,7 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
         sensorintent = Intent(this, SensorService::class.java)
 
         // 로고 버튼 클릭 이벤트 등록
-        val logoButton: ImageView = findViewById(R.id.settings)
+        val logoButton: Button = findViewById(R.id.settings)
         logoButton.setOnClickListener(this)
 
         // 사용자 정보 버튼 클릭 이벤트 등록
@@ -36,8 +39,20 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
         serverButton.setOnClickListener(this)
 
         // 측정 시작 버튼 클릭 이벤트 등록
-        val startButton: Button = findViewById(R.id.start)
+        startButton = findViewById(R.id.start)
         startButton.setOnClickListener(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        var am:ActivityManager = applicationContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for(rsi:RunningServiceInfo in am.getRunningServices(Integer.MAX_VALUE)) {
+            if(SensorService::class.java.name.equals(rsi.service.className)){
+                isMeasuring = true
+                startButton.text = "측정 중"
+                startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
+            }
+        }
     }
 
     override fun onClick(v: View?) {
@@ -74,12 +89,13 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
                     stopService(sensorintent)
                     Toast.makeText(this, "측정이 종료되었습니다.", Toast.LENGTH_SHORT).show()
                     startButton.text = "측정 시작"
+                    startButton.setBackground(resources.getDrawable(R.drawable.rounded_button_2))
                     isMeasuring = false // 측정 중이 아님을 표시
                 } else {
                     Log.d("MainActivity", "측정 시작 버튼이 클릭되었습니다.")
                     // 측정 시작 버튼 클릭 시 텍스트 변경
                     startButton.text = "측정 중"
-
+                    startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
                     // 센서 정보 가져오기
                     val selectedSensors = SettingsMainActivity.SettingsManager.selectedSensors
                     // SensorService 시작
