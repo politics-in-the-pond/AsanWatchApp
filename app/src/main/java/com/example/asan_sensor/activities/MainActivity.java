@@ -68,7 +68,6 @@ public class MainActivity extends Activity {
         StaticResources.device = Build.MODEL;
         StaticResources.os = Build.VERSION.RELEASE;
         getWatchid(deviceid);
-        deviceidText.setText(deviceid);
     }
 
     @Override
@@ -169,7 +168,7 @@ public class MainActivity extends Activity {
                     StaticResources.watchID = watchId;
                     server.setImageResource(R.drawable.baseline_check_24);
                     Log.d("WatchId", "Received watchId: " + watchId);
-
+                    deviceidText.setText(StaticResources.watchID);
                     Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
                     intent.putExtra("watchId", watchId);
                     startForegroundService(intent);
