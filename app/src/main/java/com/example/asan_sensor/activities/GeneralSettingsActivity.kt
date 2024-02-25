@@ -1,10 +1,9 @@
 package com.example.asan_sensor.activities
 
-import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.preference.PreferenceManager
+import android.text.InputType.TYPE_CLASS_NUMBER
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -15,19 +14,17 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.asan_sensor.R
-import com.example.asan_sensor.SensorService
+import com.example.asan_sensor.SettingsLoader
+import com.example.asan_sensor.StaticResources
 
-class ServerMainActivity : AppCompatActivity(), View.OnClickListener {
+class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var ipButton: Button
     private lateinit var portButton: Button
     private lateinit var saveButton: Button
     private lateinit var disconnectButton: Button
-
-    object serverManager{
-        var serverIpAddress = "210.102.172.186"
-        var serverPort: Int = 8080
-    }
+    private lateinit var passwordButton: Button
+    var loader:SettingsLoader = SettingsLoader()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,8 +42,11 @@ class ServerMainActivity : AppCompatActivity(), View.OnClickListener {
         disconnectButton = findViewById(R.id.disconnect)
         disconnectButton.setOnClickListener(this)
 
+        passwordButton = findViewById(R.id.pw)
+        passwordButton.setOnClickListener(this)
+
         // Load server info from SharedPreferences
-        loadServerInfo()
+        loadSettings()
     }
 
     override fun onClick(v: View?) {
@@ -54,31 +54,66 @@ class ServerMainActivity : AppCompatActivity(), View.OnClickListener {
             R.id.ip -> {
                 Log.d("ServerMainActivity", "IP 버튼이 클릭되었습니다.")
                 // Show dialog to input server IP address
-                showInputDialog("서버 IP 주소 입력", "IP 주소", ipButton)
+                showInputDialog("서버 주소 입력", "주소", ipButton)
             }
             R.id.port -> {
                 Log.d("ServerMainActivity", "Port 버튼이 클릭되었습니다.")
                 // Show dialog to input server port number
-                showInputDialog("포트 번호 입력", "포트 번호", portButton)
+                showInputNumericDialog("포트 번호 입력", "포트 번호", portButton)
             }
             R.id.save -> {
                 Log.d("ServerMainActivity", "Save 버튼이 클릭되었습니다.")
                 // Save server info to SharedPreferences
-                saveServerInfo()
+                saveSettings()
                 Toast.makeText(this, "서버 정보가 저장되었습니다.", Toast.LENGTH_SHORT).show()
                 finish()
             }
             R.id.disconnect -> {
                 Log.d("ServerMainActivity", "Disconnect 버튼이 클릭되었습니다.")
                 // Reset server info and disconnect
-                resetServerInfo()
-                Toast.makeText(this, "연결이 해제되었습니다.", Toast.LENGTH_SHORT).show()
+                resetSettings()
+                Toast.makeText(this, "서버 설정이 초기화되었습니다.", Toast.LENGTH_SHORT).show()
+            }
+            R.id.pw -> {
+                Log.d("ServerMainActivity", "Disconnect 버튼이 클릭되었습니다.")
+                // Reset server info and disconnect
+                showInputNumericDialog("비밀번호 입력", "비밀번호", passwordButton)
             }
         }
     }
 
     private fun showInputDialog(title: String, hint: String, button: Button) {
         val inputDialog = EditText(this)
+        inputDialog.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE))
+        inputDialog.setTextColor(Color.WHITE)
+        inputDialog.setText(button.text)
+        var text: TextView = TextView(this)
+        text.setPadding(0, 100, 0, 0)
+        text.setText(title)
+        val dialog = AlertDialog.Builder(this)
+            .setCustomTitle(text)
+            .setView(inputDialog)
+            .setPositiveButton("확인") { _, _ ->
+                val input = inputDialog.text.toString()
+                button.text = input
+            }
+            .setNegativeButton("취소", null)
+            .create()
+
+        // Adjust dialog width
+        dialog.show()
+        val width = resources.displayMetrics.widthPixels
+        val layoutParams = WindowManager.LayoutParams()
+        layoutParams.copyFrom(dialog.window?.attributes)
+        layoutParams.width = (width * 0.75).toInt()
+        dialog.window?.attributes = layoutParams
+    }
+
+    private fun showInputNumericDialog(title: String, hint: String, button: Button) {
+        val inputDialog = EditText(this)
+        inputDialog.setText(button.text)
+        inputDialog.setInputType(TYPE_CLASS_NUMBER);
+        inputDialog.setTextColor(Color.WHITE)
         inputDialog.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE))
         var text: TextView = TextView(this)
         text.setPadding(0, 100, 0, 0)
@@ -102,51 +137,41 @@ class ServerMainActivity : AppCompatActivity(), View.OnClickListener {
         dialog.window?.attributes = layoutParams
     }
 
-    private fun loadServerInfo() {
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        serverManager.serverIpAddress = preferences.getString("serverIpAddress", "-") ?: ""
-        serverManager.serverPort = preferences.getInt("serverPort", 0)
-        Log.d("서버 정보 확인", "${serverManager.serverIpAddress} : ${serverManager.serverPort}")
+    private fun loadSettings() {
+        loader.getsettings()
+        Log.d("서버 정보 확인", "${StaticResources.ServerURL} : ${StaticResources.port}")
 
-        ipButton.text = serverManager.serverIpAddress
-        portButton.text = serverManager.serverPort.toString()
+        ipButton.text = StaticResources.ServerURL
+        portButton.text = StaticResources.port
+        passwordButton.text = StaticResources.password
     }
 
-    private fun saveServerInfo() {
+    private fun saveSettings() {
         val ipAddress = ipButton.text.toString()
         val portNumber = portButton.text.toString()
+        val pw = passwordButton.text.toString()
 
         // Save server info to SharedPreferences
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val editor = preferences.edit()
-        editor.putString("serverIpAddress", ipAddress)
-        editor.putInt("serverPort", portNumber.toInt())
-        editor.apply()
-
-        // Send selected sensors to SensorService
-        sendServerInfoToService(ipAddress, portNumber.toInt())
+        loader.putsettings(ipAddress, portNumber)
+        loader.putPassword(pw)
+        loader.getsettings()
 
         Toast.makeText(this, "서버 정보가 저장되었습니다.", Toast.LENGTH_SHORT).show()
         finish()
     }
 
-    private fun sendServerInfoToService(ipAddress: String, port: Int) {
-        val intent = Intent(this, SensorService::class.java)
-        intent.action = "UPDATE_SERVER_INFO"
-        intent.putExtra("serverIpAddress", ipAddress)
-        intent.putExtra("serverPort", port)
-    }
 
-    private fun resetServerInfo() {
-        ipButton.text = serverManager.serverIpAddress // 기본값 설정
-        portButton.text = serverManager.serverPort.toString() // 기본값 설정
-        serverManager.serverIpAddress = "210.102.172.186"
-        serverManager.serverPort = 8080
+    private fun resetSettings() {
+        val ipAddress:String = "210.102.178.186"
+        val port:String = "8080"
+        val pw:String = "242424"
+        ipButton.text = ipAddress // 기본값 설정
+        portButton.text = port
+        passwordButton.text = pw
 
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val editor = preferences.edit()
-        editor.putString("serverIpAddress", serverManager.serverIpAddress) // 기본값 설정
-        editor.putInt("serverPort", serverManager.serverPort) // 기본값 설정
-        editor.apply()
+
+        loader.putsettings(ipAddress, port)
+        loader.putPassword(pw)
+        loader.getsettings()
     }
 }

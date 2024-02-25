@@ -60,7 +60,7 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
             R.id.settings -> {
                 if (!isMeasuring) { // 측정 중이 아닐 때만 설정 액티비티로 이동
                     Log.d("MainActivity", "로고 버튼이 클릭되었습니다.")
-                    val intent = Intent(this, SettingsMainActivity::class.java)
+                    val intent = Intent(this, SensorSettingsActivity::class.java)
                     startActivity(intent)
                 }
             }
@@ -76,7 +76,7 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
             R.id.server -> {
                 if (!isMeasuring) { // 측정 중이 아닐 때만 서버 정보 액티비티로 이동
                     Log.d("MainActivity", "서버 정보 버튼이 클릭되었습니다.")
-                    val intent = Intent(this, ServerMainActivity::class.java)
+                    val intent = Intent(this, GeneralSettingsActivity::class.java)
                     startActivity(intent)
                 }
             }
@@ -97,7 +97,7 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
                     startButton.text = "측정 중"
                     startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
                     // 센서 정보 가져오기
-                    val selectedSensors = SettingsMainActivity.SettingsManager.selectedSensors
+                    val selectedSensors = SensorSettingsActivity.SettingsManager.selectedSensors
                     // SensorService 시작
 
                     sensorintent?.action = "UPDATE_SENSORS"

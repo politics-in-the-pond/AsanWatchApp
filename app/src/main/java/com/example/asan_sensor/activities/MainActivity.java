@@ -64,6 +64,7 @@ public class MainActivity extends Activity {
         //startForegroundService(foregroundService);
 
         String deviceid = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+        Log.d("Main", deviceid);
         StaticResources.deviceID = deviceid;
         StaticResources.device = Build.MODEL;
         StaticResources.os = Build.VERSION.RELEASE;
@@ -144,6 +145,7 @@ public class MainActivity extends Activity {
     private void getWatchid(String deviceId) {
 
         String URL = StaticResources.getHttpURL() + "api/watch/"+deviceId;
+        Log.d("url", URL);
         JSONObject json_object = new JSONObject();
         try {
             json_object.put("androidId", deviceId);
@@ -240,7 +242,7 @@ public class MainActivity extends Activity {
                 e.printStackTrace();
             }
         }, error -> {
-            Log.e("NetworkError", error.toString());
+            Log.e("NetworkError2", error.toString());
         }) {
             @Override
             public String getBodyContentType() {

@@ -9,7 +9,7 @@ import android.hardware.SensorManager
 import android.net.wifi.WifiManager
 import android.os.IBinder
 import android.util.Log
-import com.example.asan_sensor.activities.SettingsMainActivity
+import com.example.asan_sensor.activities.SensorSettingsActivity
 import com.example.asan_sensor.socket.WebSocketStompClient
 import org.json.JSONObject
 import java.nio.ByteBuffer
@@ -25,7 +25,7 @@ class SensorService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private lateinit var wifiManager: WifiManager
     private var isMeasuring: Boolean = false
-    private var selectedSensors = SettingsMainActivity.SettingsManager.selectedSensors
+    private var selectedSensors = SensorSettingsActivity.SettingsManager.selectedSensors
     private var webSocketStompClient: WebSocketStompClient? = null
     private var watchId = ""
 
@@ -161,8 +161,8 @@ class SensorService : Service(), SensorEventListener {
                     val sensor: Sensor? = sensorManager.getDefaultSensor(sensorTypeInt)
                     sensor?.let {
                         // Register listener for the sensor
-                        val samplingRateMsAcc = 1000 / SettingsMainActivity.SettingsManager.hzValueAccelerometer.toInt() // Hz를 ms로 변환
-                        val samplingRateMsGyro = 1000 / SettingsMainActivity.SettingsManager.hzValueGyroscope.toInt()
+                        val samplingRateMsAcc = 1000 / SensorSettingsActivity.SettingsManager.hzValueAccelerometer.toInt() // Hz를 ms로 변환
+                        val samplingRateMsGyro = 1000 / SensorSettingsActivity.SettingsManager.hzValueGyroscope.toInt()
                         // startSensorMeasurement() 메서드 내에서 각 센서의 측정 속도를 설정할 때, 가속도 센서와 자이로 센서에 대한 Hz 값을 사용하도록 변경합니다.
                         sensorManager.registerListener(
                             this,

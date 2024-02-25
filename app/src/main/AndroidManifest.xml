@@ -100,11 +100,11 @@
         <service android:name=".SensorService" />
 
         <activity
-            android:name=".activities.ServerMainActivity"
+            android:name=".activities.GeneralSettingsActivity"
             android:theme="@style/AppTheme" />
 
         <activity
-            android:name=".activities.SettingsMainActivity"
+            android:name=".activities.SensorSettingsActivity"
             android:theme="@style/AppTheme" />
 
         <activity
@@ -113,9 +113,6 @@
 
         <activity
             android:name=".activities.PasswordActivity" />
-
-        <activity
-            android:name=".activities.SettingActivity" />
 
     </application>
 </manifest>

@@ -3,9 +3,9 @@ package com.example.asan_sensor;
 import android.content.Context;
 
 public class StaticResources {
-    public static int password = 123;
+    public static String password = "242424";
     public static String ServerURL = "210.102.178.186";
-    public static String port = "8080";
+    public static String port = "8081";
     public static String watchID = "";
     public static String deviceID = "";
     public static String device = "";

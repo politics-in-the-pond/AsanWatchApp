@@ -20,7 +20,7 @@ import androidx.core.content.edit
 import com.example.asan_sensor.R
 import com.example.asan_sensor.SensorService
 
-class SettingsMainActivity : AppCompatActivity(), View.OnClickListener {
+class SensorSettingsActivity : AppCompatActivity(), View.OnClickListener {
 
     object SettingsManager {
         var hzValueAccelerometer: String = SensorManager.SENSOR_DELAY_NORMAL.toString()
