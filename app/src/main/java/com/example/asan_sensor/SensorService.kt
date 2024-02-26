@@ -35,6 +35,7 @@ class SensorService : Service(), SensorEventListener {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d("sensorlist", selectedSensors.toString())
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
     }
