@@ -142,6 +142,7 @@ class SensorSettingsActivity : AppCompatActivity(), View.OnClickListener {
                 // Send selected sensors to SensorService
                 sendSelectedSensorsToService()
                 Toast.makeText(this, "설정이 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                finish()
             }
 
             R.id.reset -> {

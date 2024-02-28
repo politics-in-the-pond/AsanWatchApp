@@ -2,6 +2,7 @@ package com.example.asan_sensor.activities
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.NetworkResponse
@@ -12,20 +13,19 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.asan_sensor.R
 import com.example.asan_sensor.StaticResources
-import com.example.asan_sensor.socket.WebSocketStompClient
 import org.json.JSONException
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
 
 class UserMainActivity : AppCompatActivity() {
 
-    private var webSocketStompClient: WebSocketStompClient? = null
     private var watchId = ""
     private var name = ""
     private var host = ""
     lateinit var userNameTextView : TextView
     lateinit var watchIDTextView : TextView
     lateinit var userLocationTextView : TextView
+    lateinit var checkButton : Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +34,11 @@ class UserMainActivity : AppCompatActivity() {
         userNameTextView = findViewById(R.id.userNameTextView)
         watchIDTextView = findViewById(R.id.watchIDTextView)
         userLocationTextView = findViewById(R.id.userLocationTextView)
+        checkButton = findViewById(R.id.checkButton)
+
+        checkButton.setOnClickListener{
+            finish()
+        }
 
         getUserInfo()
     }
