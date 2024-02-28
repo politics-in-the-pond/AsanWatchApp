@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -13,7 +12,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -26,7 +24,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.asan_sensor.Ping;
 import com.example.asan_sensor.R;
-import com.example.asan_sensor.SettingsLoader;
+import com.example.asan_sensor.GeneralSettingsLoader;
+import com.example.asan_sensor.SensorSettingsLoader;
 import com.example.asan_sensor.StaticResources;
 import com.example.asan_sensor.WatchForegroundService;
 import com.example.asan_sensor.databinding.ActivityMaintempBinding;
@@ -52,8 +51,6 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         StaticResources.maincontext = getApplicationContext();
-        StaticResources.pref = new SettingsLoader();
-        StaticResources.pref.getsettings();
 
         UIBind();
         getPermission();
@@ -68,6 +65,10 @@ public class MainActivity extends Activity {
         StaticResources.deviceID = deviceid;
         StaticResources.device = Build.MODEL;
         StaticResources.os = Build.VERSION.RELEASE;
+        SensorSettingsLoader sensorSettingsLoader = new SensorSettingsLoader();
+        GeneralSettingsLoader generalSettingsLoader = new GeneralSettingsLoader();
+        sensorSettingsLoader.getSensorSettings();
+        generalSettingsLoader.getGeneralSettings();
         getWatchid(deviceid);
     }
 

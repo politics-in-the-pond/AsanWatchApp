@@ -66,11 +66,11 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             R.id.user -> {
-                if (!isMeasuring) { // 측정 중이 아닐 때만 사용자 정보 액티비티로 이동
-                    Log.d("MainActivity", "사용자 정보 버튼이 클릭되었습니다.")
-                    val intent = Intent(this, UserMainActivity::class.java)
-                    startActivity(intent)
-                }
+
+                Log.d("MainActivity", "사용자 정보 버튼이 클릭되었습니다.")
+                val intent = Intent(this, UserMainActivity::class.java)
+                startActivity(intent)
+
             }
 
             R.id.server -> {
@@ -96,12 +96,9 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
                     // 측정 시작 버튼 클릭 시 텍스트 변경
                     startButton.text = "측정 중"
                     startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
-                    // 센서 정보 가져오기
-                    val selectedSensors = SensorSettingsActivity.SettingsManager.selectedSensors
                     // SensorService 시작
 
                     sensorintent?.action = "UPDATE_SENSORS"
-                    sensorintent?.putStringArrayListExtra("selectedSensors", ArrayList(selectedSensors))
                     startService(sensorintent)
 
                     // 토스트 메시지로 출력

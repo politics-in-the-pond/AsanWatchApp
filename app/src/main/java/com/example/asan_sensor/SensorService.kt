@@ -9,7 +9,6 @@ import android.hardware.SensorManager
 import android.net.wifi.WifiManager
 import android.os.IBinder
 import android.util.Log
-import com.example.asan_sensor.activities.SensorSettingsActivity
 import com.example.asan_sensor.socket.WebSocketStompClient
 import org.json.JSONObject
 import java.nio.ByteBuffer
@@ -25,7 +24,6 @@ class SensorService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private lateinit var wifiManager: WifiManager
     private var isMeasuring: Boolean = false
-    private var selectedSensors = SensorSettingsActivity.SettingsManager.selectedSensors
     private var webSocketStompClient: WebSocketStompClient? = null
     private var watchId = ""
 
@@ -35,7 +33,6 @@ class SensorService : Service(), SensorEventListener {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("sensorlist", selectedSensors.toString())
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
     }
@@ -54,7 +51,7 @@ class SensorService : Service(), SensorEventListener {
         if (event != null) {
             val sensorType = event.sensor.type
             val sensorData = processSensorData(event)
-
+            Log.d("LOG", sensorType.toString() + " 측정")
             if (sensorData != null) {
                 sendData(event, sensorType)
             } else {
@@ -146,78 +143,64 @@ class SensorService : Service(), SensorEventListener {
     }
 
     fun startSensorMeasurement() {
-        if (!isMeasuring && selectedSensors.isNotEmpty()) {
-            selectedSensors.forEach { sensorType ->
-                val sensorTypeInt: Int = when (sensorType) {
-                    "심박수" -> Sensor.TYPE_HEART_RATE
-                    "가속도 센서" -> Sensor.TYPE_ACCELEROMETER
-                    "광센서" -> Sensor.TYPE_LIGHT
-                    "자이로 센서" -> Sensor.TYPE_GYROSCOPE
-                    "바로미터 센서" -> Sensor.TYPE_PRESSURE
-                    else -> -1
-                }
-
+        var sensorTypes = arrayOf(Sensor.TYPE_HEART_RATE, Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_LIGHT, Sensor.TYPE_GYROSCOPE, Sensor.TYPE_PRESSURE)
+        if (!isMeasuring) {
+            for(sensorTypeInt:Int in sensorTypes)
                 // Check if the sensor type is valid
                 if (sensorTypeInt != -1) {
                     val sensor: Sensor? = sensorManager.getDefaultSensor(sensorTypeInt)
                     sensor?.let {
                         // Register listener for the sensor
-                        val samplingRateMsAcc = 1000 / SensorSettingsActivity.SettingsManager.hzValueAccelerometer.toInt() // Hz를 ms로 변환
-                        val samplingRateMsGyro = 1000 / SensorSettingsActivity.SettingsManager.hzValueGyroscope.toInt()
+                        val samplingRateMsAcc = 1000 / StaticResources.acchz // Hz를 ms로 변환
+                        val samplingRateMsGyro = 1000 / StaticResources.gyrohz
                         // startSensorMeasurement() 메서드 내에서 각 센서의 측정 속도를 설정할 때, 가속도 센서와 자이로 센서에 대한 Hz 값을 사용하도록 변경합니다.
                         sensorManager.registerListener(
                             this,
                             it,
-                            when (sensorType) {
-                                "가속도 센서" -> {
+                            when (sensorTypeInt) {
+                                Sensor.TYPE_ACCELEROMETER -> {
                                     samplingRateMsAcc
                                 }
-                                "자이로 센서" -> {
+                                Sensor.TYPE_GYROSCOPE -> {
                                     samplingRateMsGyro
                                 }
                                 else -> SensorManager.SENSOR_DELAY_NORMAL
                             }
                         )
-
-                        Log.d("Success", "$sensorType 측정을 시작합니다.")
                     } ?: run {
-                        Log.d("Failure 1", "$sensorType 센서를 찾을 수 없습니다.")
+
                     }
                 } else {
                     Log.d("Failure 2", "지원되지 않는 센서 타입입니다.")
                 }
             }
-            isMeasuring = true
-        }
+        isMeasuring = true
+
     }
 
     fun stopSensorMeasurement() {
+        var sensorTypes = arrayOf(
+            Sensor.TYPE_HEART_RATE,
+            Sensor.TYPE_ACCELEROMETER,
+            Sensor.TYPE_LIGHT,
+            Sensor.TYPE_GYROSCOPE,
+            Sensor.TYPE_PRESSURE
+        )
         if (isMeasuring) {
-            selectedSensors.forEach { sensorType ->
-                val sensorTypeInt: Int = when (sensorType) {
-                    "심박수" -> Sensor.TYPE_HEART_RATE
-                    "가속도 센서" -> Sensor.TYPE_ACCELEROMETER
-                    "광센서" -> Sensor.TYPE_LIGHT
-                    "자이로 센서" -> Sensor.TYPE_GYROSCOPE
-                    "바로미터 센서" -> Sensor.TYPE_PRESSURE
-                    else -> -1
-                }
+            for (sensorTypeInt: Int in sensorTypes)
 
-                // Check if the sensor type is valid
+            // Check if the sensor type is valid
                 if (sensorTypeInt != -1) {
                     val sensor: Sensor? = sensorManager.getDefaultSensor(sensorTypeInt)
                     sensor?.let {
                         // Unregister listener for the sensor
                         sensorManager.unregisterListener(this, it)
-                        Log.d("Finished", "$sensorType 측정이 종료되었습니다.")
                     } ?: run {
-                        Log.d("Failure", "$sensorType 센서를 찾을 수 없습니다.")
                     }
                 } else {
                     Log.d("Failure", "지원되지 않는 센서 타입입니다.")
                 }
-                isMeasuring = false
-            }
+            isMeasuring = false
         }
     }
 

@@ -13,8 +13,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.example.asan_sensor.GeneralSettingsLoader
 import com.example.asan_sensor.R
-import com.example.asan_sensor.SettingsLoader
 import com.example.asan_sensor.StaticResources
 
 class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
@@ -24,7 +24,8 @@ class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var saveButton: Button
     private lateinit var disconnectButton: Button
     private lateinit var passwordButton: Button
-    var loader:SettingsLoader = SettingsLoader()
+    var loader: GeneralSettingsLoader =
+        GeneralSettingsLoader()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -138,7 +139,7 @@ class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun loadSettings() {
-        loader.getsettings()
+        loader.getGeneralSettings()
         Log.d("서버 정보 확인", "${StaticResources.ServerURL} : ${StaticResources.port}")
 
         ipButton.text = StaticResources.ServerURL
@@ -152,9 +153,9 @@ class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
         val pw = passwordButton.text.toString()
 
         // Save server info to SharedPreferences
-        loader.putsettings(ipAddress, portNumber)
+        loader.putGeneralSettings(ipAddress, portNumber)
         loader.putPassword(pw)
-        loader.getsettings()
+        loader.getGeneralSettings()
 
         Toast.makeText(this, "서버 정보가 저장되었습니다.", Toast.LENGTH_SHORT).show()
         finish()
@@ -170,8 +171,8 @@ class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
         passwordButton.text = pw
 
 
-        loader.putsettings(ipAddress, port)
+        loader.putGeneralSettings(ipAddress, port)
         loader.putPassword(pw)
-        loader.getsettings()
+        loader.getGeneralSettings()
     }
 }

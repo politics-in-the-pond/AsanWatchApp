@@ -11,7 +11,9 @@ public class StaticResources {
     public static String device = "";
     public static String os = "";
     public static Context maincontext;
-    public static SettingsLoader pref;
+    public static int acchz;
+    public static int gyrohz;
+
 
     public static String getHttpURL(){
         if(port.equals(""))
