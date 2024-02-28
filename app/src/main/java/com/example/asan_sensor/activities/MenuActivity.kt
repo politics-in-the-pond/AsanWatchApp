@@ -66,7 +66,6 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             R.id.user -> {
-
                 Log.d("MainActivity", "사용자 정보 버튼이 클릭되었습니다.")
                 val intent = Intent(this, UserMainActivity::class.java)
                 startActivity(intent)

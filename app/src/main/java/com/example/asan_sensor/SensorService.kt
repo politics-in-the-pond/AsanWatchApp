@@ -13,9 +13,6 @@ import com.example.asan_sensor.socket.WebSocketStompClient
 import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class SensorService : Service(), SensorEventListener {
 
@@ -98,7 +95,7 @@ class SensorService : Service(), SensorEventListener {
                     Sensor.TYPE_HEART_RATE -> {
                         val result_json = JSONObject()
                         result_json.put("value", sensorEvent.values[0])
-                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        result_json.put("timeStamp", System.currentTimeMillis())
                         webSocketStompClient?.sendHeartrate(result_json)
                     }
 
@@ -107,14 +104,14 @@ class SensorService : Service(), SensorEventListener {
                         result_json.put("accX", sensorEvent.values[0])
                         result_json.put("accY", sensorEvent.values[1])
                         result_json.put("accZ", sensorEvent.values[2])
-                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        result_json.put("timeStamp", System.currentTimeMillis())
                         webSocketStompClient?.sendAccelerometer(result_json)
                     }
 
                     Sensor.TYPE_LIGHT -> {
                         val result_json = JSONObject()
                         result_json.put("value", sensorEvent.values[0])
-                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        result_json.put("timeStamp", System.currentTimeMillis())
                         webSocketStompClient?.sendLight(result_json)
                     }
 
@@ -123,14 +120,14 @@ class SensorService : Service(), SensorEventListener {
                         result_json.put("gyroX", sensorEvent.values[0])
                         result_json.put("gyroY", sensorEvent.values[1])
                         result_json.put("gyroZ", sensorEvent.values[2])
-                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        result_json.put("timeStamp", System.currentTimeMillis())
                         webSocketStompClient?.sendGyroscope(result_json)
                     }
 
                     Sensor.TYPE_PRESSURE -> {
                         val result_json = JSONObject()
                         result_json.put("value", sensorEvent.values[0])
-                        result_json.put("timeStamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+                        result_json.put("timeStamp", System.currentTimeMillis())
                         webSocketStompClient?.sendPressure(result_json)
                     }
 
