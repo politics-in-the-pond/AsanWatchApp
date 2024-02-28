@@ -1,8 +1,6 @@
 package com.example.asan_sensor.socket;
 
 
-import android.util.Log;
-
 import com.example.asan_sensor.StaticResources;
 
 import org.json.JSONObject;
@@ -10,6 +8,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import kotlin.jvm.functions.Function1;
 import ua.naiksoftware.stomp.Stomp;
 import ua.naiksoftware.stomp.StompClient;
 import io.reactivex.CompletableObserver;
