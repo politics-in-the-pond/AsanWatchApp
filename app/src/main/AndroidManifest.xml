@@ -97,10 +97,17 @@
             android:name=".activities.UserMainActivity"
             android:theme="@style/AppTheme" />
 
+        <activity
+            android:name=".activities.GeneralSettingsActivity" />
+
         <service android:name=".SensorService" />
 
         <activity
-            android:name=".activities.GeneralSettingsActivity"
+            android:name=".activities.ServerSettingsActivity"
+            android:theme="@style/AppTheme" />
+
+        <activity
+            android:name=".activities.PasswordSettingsActivity"
             android:theme="@style/AppTheme" />
 
         <activity

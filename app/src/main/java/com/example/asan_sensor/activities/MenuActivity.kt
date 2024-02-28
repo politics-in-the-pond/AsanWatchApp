@@ -88,13 +88,13 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
                     stopService(sensorintent)
                     Toast.makeText(this, "측정이 종료되었습니다.", Toast.LENGTH_SHORT).show()
                     startButton.text = "측정 시작"
-                    startButton.setBackground(resources.getDrawable(R.drawable.rounded_button_2))
+                    startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
                     isMeasuring = false // 측정 중이 아님을 표시
                 } else {
                     Log.d("MainActivity", "측정 시작 버튼이 클릭되었습니다.")
                     // 측정 시작 버튼 클릭 시 텍스트 변경
                     startButton.text = "측정 중"
-                    startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
+                    startButton.setBackground(resources.getDrawable(R.drawable.measure_button))
                     // SensorService 시작
 
                     sensorintent?.action = "UPDATE_SENSORS"

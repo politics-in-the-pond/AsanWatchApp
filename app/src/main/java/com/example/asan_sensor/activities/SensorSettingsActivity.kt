@@ -30,7 +30,7 @@ class SensorSettingsActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.settings_main)
+        setContentView(R.layout.sensor_settings)
 
         acchzButton = findViewById(R.id.sensors)
         acchzButton.text = StaticResources.acchz.toString()

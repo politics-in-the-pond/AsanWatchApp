@@ -17,7 +17,7 @@ import com.example.asan_sensor.GeneralSettingsLoader
 import com.example.asan_sensor.R
 import com.example.asan_sensor.StaticResources
 
-class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
+class ServerSettingsActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var ipButton: Button
     private lateinit var portButton: Button
@@ -29,7 +29,7 @@ class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.server_main)
+        setContentView(R.layout.server_settings)
 
         ipButton = findViewById(R.id.ip)
         ipButton.setOnClickListener(this)
@@ -42,9 +42,6 @@ class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
 
         disconnectButton = findViewById(R.id.disconnect)
         disconnectButton.setOnClickListener(this)
-
-        passwordButton = findViewById(R.id.pw)
-        passwordButton.setOnClickListener(this)
 
         // Load server info from SharedPreferences
         loadSettings()
@@ -66,19 +63,12 @@ class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
                 Log.d("ServerMainActivity", "Save 버튼이 클릭되었습니다.")
                 // Save server info to SharedPreferences
                 saveSettings()
-                Toast.makeText(this, "서버 정보가 저장되었습니다.", Toast.LENGTH_SHORT).show()
-                finish()
             }
             R.id.disconnect -> {
                 Log.d("ServerMainActivity", "Disconnect 버튼이 클릭되었습니다.")
                 // Reset server info and disconnect
                 resetSettings()
                 Toast.makeText(this, "서버 설정이 초기화되었습니다.", Toast.LENGTH_SHORT).show()
-            }
-            R.id.pw -> {
-                Log.d("ServerMainActivity", "Disconnect 버튼이 클릭되었습니다.")
-                // Reset server info and disconnect
-                showInputNumericDialog("비밀번호 입력", "비밀번호", passwordButton)
             }
         }
     }
@@ -144,17 +134,14 @@ class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
 
         ipButton.text = StaticResources.ServerURL
         portButton.text = StaticResources.port
-        passwordButton.text = StaticResources.password
     }
 
     private fun saveSettings() {
         val ipAddress = ipButton.text.toString()
         val portNumber = portButton.text.toString()
-        val pw = passwordButton.text.toString()
 
         // Save server info to SharedPreferences
         loader.putGeneralSettings(ipAddress, portNumber)
-        loader.putPassword(pw)
         loader.getGeneralSettings()
 
         Toast.makeText(this, "서버 정보가 저장되었습니다.", Toast.LENGTH_SHORT).show()
@@ -165,14 +152,10 @@ class GeneralSettingsActivity : AppCompatActivity(), View.OnClickListener {
     private fun resetSettings() {
         val ipAddress:String = "210.102.178.186"
         val port:String = "8080"
-        val pw:String = "242424"
         ipButton.text = ipAddress // 기본값 설정
         portButton.text = port
-        passwordButton.text = pw
-
 
         loader.putGeneralSettings(ipAddress, port)
-        loader.putPassword(pw)
         loader.getGeneralSettings()
     }
 }
