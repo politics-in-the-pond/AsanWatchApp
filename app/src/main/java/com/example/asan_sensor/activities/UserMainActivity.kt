@@ -31,13 +31,6 @@ class UserMainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.user_detail)
 
-        if (intent != null) {
-            this.watchId = intent.getStringExtra("watchId").toString()
-            this.name = intent.getStringExtra("name").toString()
-            this.host = intent.getStringExtra("host").toString()
-            webSocketStompClient = WebSocketStompClient.getInstance(watchId)
-        }
-
         userNameTextView = findViewById(R.id.userNameTextView)
         watchIDTextView = findViewById(R.id.watchIDTextView)
         userLocationTextView = findViewById(R.id.userLocationTextView)
