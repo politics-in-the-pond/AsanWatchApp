@@ -136,6 +136,7 @@ class SensorSettingsActivity : AppCompatActivity(), View.OnClickListener {
                 acchzButton.text = "가속도 센서 Hz : ${StaticResources.acchz.toString()}"
                 gyrohzButton.text = "자이로 센서 Hz : ${StaticResources.gyrohz.toString()}"
                 Toast.makeText(this, "설정이 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                finish()
             }
 
             R.id.reset -> {
