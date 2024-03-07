@@ -2,6 +2,7 @@ package com.example.asan_sensor.activities;
 
 import android.Manifest;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -45,6 +46,7 @@ public class MainActivity extends Activity {
     private ImageView setting;
     private ImageView network;
     private ImageView server;
+    private ImageView bt;
 
 
     @Override
@@ -54,6 +56,7 @@ public class MainActivity extends Activity {
 
         UIBind();
         getPermission();
+        bluetooth_check();
 
         //foregroundService = new Intent(this, WatchForegroundService.class);
         //foregroundService.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
@@ -103,6 +106,7 @@ public class MainActivity extends Activity {
         setting = binding.setting;
         network = binding.networkicon;
         server = binding.servericon;
+        bt = binding.bticon;
 
         setting.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,6 +115,13 @@ public class MainActivity extends Activity {
                 startActivity(pwintent);
             }
         });
+    }
+
+    protected void bluetooth_check(){
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if(mBluetoothAdapter != null){
+            bt.setImageResource(R.drawable.baseline_check_24);
+        }
     }
 
     protected void network_check(){
