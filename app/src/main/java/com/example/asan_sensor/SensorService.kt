@@ -156,12 +156,14 @@ class SensorService : Service(), SensorEventListener {
                             it,
                             when (sensorTypeInt) {
                                 Sensor.TYPE_ACCELEROMETER -> {
-                                    samplingRateMsAcc
+                                    // samplingRateMsAcc
+                                    500000000
                                 }
                                 Sensor.TYPE_GYROSCOPE -> {
-                                    samplingRateMsGyro
+                                    //samplingRateMsGyro
+                                    500000000
                                 }
-                                else -> SensorManager.SENSOR_DELAY_NORMAL
+                                else -> 500000000 //SensorManager.SENSOR_DELAY_NORMAL
                             }
                         )
                     } ?: run {
