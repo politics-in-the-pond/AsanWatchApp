@@ -3,6 +3,7 @@ package com.example.asan_sensor.socket;
 
 import com.example.asan_sensor.StaticResources;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -69,138 +70,184 @@ public class WebSocketStompClient {
 
     public void sendAccelerometer(JSONObject jsonData) {
         if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // 현재 시간을 초 단위로 얻기
+                long currentTimeSeconds = System.currentTimeMillis() / 1000;
 
-            String payload = jsonData.toString();
+                // JSON 데이터에 현재 시간 추가
+                jsonData.put("timeStamp", currentTimeSeconds);
 
-            stompClient.send("/app/accelerometer", payload)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new CompletableObserver() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
-                            // 구독 시작 시 필요한 작업 (옵션)
-                        }
+                String payload = jsonData.toString();
 
-                        @Override
-                        public void onComplete() {
-                            // 메시지 전송 성공 처리
-                        }
+                stompClient.send("/app/accelerometer", payload)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new CompletableObserver() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+                                // 구독 시작 시 필요한 작업 (옵션)
+                            }
 
-                        @Override
-                        public void onError(Throwable e) {
-                            // 메시지 전송 실패 처리
-                        }
-                    });
+                            @Override
+                            public void onComplete() {
+                                // 메시지 전송 성공 처리
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                // 메시지 전송 실패 처리
+                            }
+                        });
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public void sendHeartrate(JSONObject jsonData) {
         if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // 현재 시간을 초 단위로 얻기
+                long currentTimeSeconds = System.currentTimeMillis() / 1000;
 
-            String payload = jsonData.toString();
+                // JSON 데이터에 현재 시간 추가
+                jsonData.put("timeStamp", currentTimeSeconds);
 
-            stompClient.send("/app/heart-rate", payload)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new CompletableObserver() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
-                            // 구독 시작 시 필요한 작업 (옵션)
-                        }
+                String payload = jsonData.toString();
 
-                        @Override
-                        public void onComplete() {
-                            // 메시지 전송 성공 처리
-                        }
+                stompClient.send("/app/heart-rate", payload)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new CompletableObserver() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+                                // 구독 시작 시 필요한 작업 (옵션)
+                            }
 
-                        @Override
-                        public void onError(Throwable e) {
-                            // 메시지 전송 실패 처리
-                        }
-                    });
+                            @Override
+                            public void onComplete() {
+                                // 메시지 전송 성공 처리
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                // 메시지 전송 실패 처리
+                            }
+                        });
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public void sendGyroscope(JSONObject jsonData) {
         if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // 현재 시간을 초 단위로 얻기
+                long currentTimeSeconds = System.currentTimeMillis() / 1000;
 
-            String payload = jsonData.toString();
+                // JSON 데이터에 현재 시간 추가
+                jsonData.put("timeStamp", currentTimeSeconds);
 
-            stompClient.send("/app/gyroscope", payload)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new CompletableObserver() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
-                            // 구독 시작 시 필요한 작업 (옵션)
-                        }
+                String payload = jsonData.toString();
 
-                        @Override
-                        public void onComplete() {
-                            // 메시지 전송 성공 처리
-                        }
+                stompClient.send("/app/gyroscope", payload)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new CompletableObserver() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+                                // 구독 시작 시 필요한 작업 (옵션)
+                            }
 
-                        @Override
-                        public void onError(Throwable e) {
-                            // 메시지 전송 실패 처리
-                        }
-                    });
+                            @Override
+                            public void onComplete() {
+                                // 메시지 전송 성공 처리
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                // 메시지 전송 실패 처리
+                            }
+                        });
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public void sendPressure(JSONObject jsonData) {
         if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // 현재 시간을 초 단위로 얻기
+                long currentTimeSeconds = System.currentTimeMillis() / 1000;
 
-            String payload = jsonData.toString();
+                // JSON 데이터에 현재 시간 추가
+                jsonData.put("timeStamp", currentTimeSeconds);
 
-            stompClient.send("/app/barometer", payload)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new CompletableObserver() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
-                            // 구독 시작 시 필요한 작업 (옵션)
-                        }
+                String payload = jsonData.toString();
 
-                        @Override
-                        public void onComplete() {
-                            // 메시지 전송 성공 처리
-                        }
+                stompClient.send("/app/barometer", payload)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new CompletableObserver() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+                                // 구독 시작 시 필요한 작업 (옵션)
+                            }
 
-                        @Override
-                        public void onError(Throwable e) {
-                            // 메시지 전송 실패 처리
-                        }
-                    });
+                            @Override
+                            public void onComplete() {
+                                // 메시지 전송 성공 처리
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                // 메시지 전송 실패 처리
+                            }
+                        });
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     public void sendLight(JSONObject jsonData) {
         if (stompClient != null && stompClient.isConnected()) {
+            try {
+                // 현재 시간을 초 단위로 얻기
+                long currentTimeSeconds = System.currentTimeMillis() / 1000;
 
-            String payload = jsonData.toString();
+                // JSON 데이터에 현재 시간 추가
+                jsonData.put("timeStamp", currentTimeSeconds);
 
-            stompClient.send("/app/light", payload)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new CompletableObserver() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
-                            // 구독 시작 시 필요한 작업 (옵션)
-                        }
+                String payload = jsonData.toString();
 
-                        @Override
-                        public void onComplete() {
-                            // 메시지 전송 성공 처리
-                        }
+                stompClient.send("/app/light", payload)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new CompletableObserver() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+                                // 구독 시작 시 필요한 작업 (옵션)
+                            }
 
-                        @Override
-                        public void onError(Throwable e) {
-                            // 메시지 전송 실패 처리
-                        }
-                    });
+                            @Override
+                            public void onComplete() {
+                                // 메시지 전송 성공 처리
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                // 메시지 전송 실패 처리
+                            }
+                        });
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
+
 
     public void disconnect() {
         if (stompClient != null) {

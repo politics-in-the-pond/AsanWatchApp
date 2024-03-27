@@ -48,7 +48,6 @@ public class MainActivity extends Activity {
     private ImageView server;
     private ImageView bt;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -278,5 +277,4 @@ public class MainActivity extends Activity {
 
         requestQueue.add(stringRequest);
     }
-
 }

@@ -10,8 +10,10 @@ import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.asan_sensor.Ping
 import com.example.asan_sensor.R
 import com.example.asan_sensor.SensorService
+import com.example.asan_sensor.StaticResources
 
 class MenuActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -20,6 +22,27 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
 
     var sensorintent: Intent? = null
     lateinit var startButton: Button
+
+    private var wifiConnected: Boolean = true
+    private var serverConnected: Boolean = true
+
+    fun wifiTest(){
+        val ping = Ping("https://dns.google/")
+        ping.start()
+        Log.d("와이파이 연결 테스트", ping.toString())
+        if (!ping.isSuccess()){
+            !wifiConnected
+        }
+    }
+
+    fun serverTest(){
+        val ping = Ping(StaticResources.ServerURL)
+        ping.start()
+        Log.d("서버 연결 테스트", ping.toString())
+        if (!ping.isSuccess()){
+            !serverConnected
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,20 +114,29 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
                     startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
                     isMeasuring = false // 측정 중이 아님을 표시
                 } else {
-                    Log.d("MainActivity", "측정 시작 버튼이 클릭되었습니다.")
-                    // 측정 시작 버튼 클릭 시 텍스트 변경
-                    startButton.text = "측정 중"
-                    startButton.setBackground(resources.getDrawable(R.drawable.measure_button))
-                    // SensorService 시작
-
-                    sensorintent?.action = "UPDATE_SENSORS"
-                    startService(sensorintent)
-
-                    // 토스트 메시지로 출력
-                    Toast.makeText(this, "측정을 시작합니다.", Toast.LENGTH_SHORT).show()
-                    isMeasuring = true // 측정 중임을 표시
+                    serverTest()
+                    wifiTest()
+                    if (!wifiConnected) {
+                        // 서버에 연결되어 있지 않은 경우
+                        Toast.makeText(this, "와이파이 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                    } else if (!serverConnected){
+                        // 서버에 연결되어 있지 않은 경우
+                        Toast.makeText(this, "서버 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Log.d("MainActivity", "측정 시작 버튼이 클릭되었습니다.")
+                        // 측정 시작 버튼 클릭 시 텍스트 변경
+                        startButton.text = "측정 중"
+                        startButton.setBackground(resources.getDrawable(R.drawable.measure_button))
+                        // SensorService 시작
+                        sensorintent?.action = "UPDATE_SENSORS"
+                        startService(sensorintent)
+                        // 토스트 메시지로 출력
+                        Toast.makeText(this, "측정을 시작합니다.", Toast.LENGTH_SHORT).show()
+                        isMeasuring = true // 측정 중임을 표시
+                    }
                 }
             }
+
         }
     }
 }
