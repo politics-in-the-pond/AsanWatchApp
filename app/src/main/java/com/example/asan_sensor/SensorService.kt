@@ -13,6 +13,7 @@ import com.example.asan_sensor.socket.WebSocketStompClient
 import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.Date
 
 class SensorService : Service(), SensorEventListener {
 
@@ -23,6 +24,8 @@ class SensorService : Service(), SensorEventListener {
     private var isMeasuring: Boolean = false
     private var webSocketStompClient: WebSocketStompClient? = null
     private var watchId = ""
+    private var acccheck = 0
+    private var gyrocheck = 0
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -100,12 +103,19 @@ class SensorService : Service(), SensorEventListener {
                     }
 
                     Sensor.TYPE_ACCELEROMETER -> {
-                        val result_json = JSONObject()
-                        result_json.put("accX", sensorEvent.values[0])
-                        result_json.put("accY", sensorEvent.values[1])
-                        result_json.put("accZ", sensorEvent.values[2])
-                        result_json.put("timeStamp", System.currentTimeMillis())
-                        webSocketStompClient?.sendAccelerometer(result_json)
+                        acccheck += 1
+                        acccheck %= 10000
+                        if(acccheck % 2 == 0) {
+                            var now: Date = Date()
+                            var nowTime: String = now.toString()
+                            //Log.d("acctime", nowTime)
+                            val result_json = JSONObject()
+                            result_json.put("accX", sensorEvent.values[0])
+                            result_json.put("accY", sensorEvent.values[1])
+                            result_json.put("accZ", sensorEvent.values[2])
+                            result_json.put("timeStamp", System.currentTimeMillis())
+                            webSocketStompClient?.sendAccelerometer(result_json)
+                        }
                     }
 
                     Sensor.TYPE_LIGHT -> {
@@ -116,12 +126,16 @@ class SensorService : Service(), SensorEventListener {
                     }
 
                     Sensor.TYPE_GYROSCOPE -> {
-                        val result_json = JSONObject()
-                        result_json.put("gyroX", sensorEvent.values[0])
-                        result_json.put("gyroY", sensorEvent.values[1])
-                        result_json.put("gyroZ", sensorEvent.values[2])
-                        result_json.put("timeStamp", System.currentTimeMillis())
-                        webSocketStompClient?.sendGyroscope(result_json)
+                        gyrocheck += 1
+                        gyrocheck %= 10000
+                        if(gyrocheck % 2 == 0) {
+                            val result_json = JSONObject()
+                            result_json.put("gyroX", sensorEvent.values[0])
+                            result_json.put("gyroY", sensorEvent.values[1])
+                            result_json.put("gyroZ", sensorEvent.values[2])
+                            result_json.put("timeStamp", System.currentTimeMillis())
+                            webSocketStompClient?.sendGyroscope(result_json)
+                        }
                     }
 
                     Sensor.TYPE_PRESSURE -> {
@@ -157,13 +171,13 @@ class SensorService : Service(), SensorEventListener {
                             when (sensorTypeInt) {
                                 Sensor.TYPE_ACCELEROMETER -> {
                                     // samplingRateMsAcc
-                                    500000000
+                                    5000000
                                 }
                                 Sensor.TYPE_GYROSCOPE -> {
                                     //samplingRateMsGyro
-                                    500000000
+                                    5000000
                                 }
-                                else -> 500000000 //SensorManager.SENSOR_DELAY_NORMAL
+                                else -> 5000000 //SensorManager.SENSOR_DELAY_NORMAL
                             }
                         )
                     } ?: run {
