@@ -2,8 +2,9 @@ package com.example.asan_sensor.activities
 
 import android.app.ActivityManager
 import android.app.ActivityManager.RunningServiceInfo
-import android.content.Context
-import android.content.Intent
+import android.content.*
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -17,7 +18,6 @@ import com.example.asan_sensor.StaticResources
 
 class MenuActivity : AppCompatActivity(), View.OnClickListener {
 
-    //private var sensorService: SensorService = SensorService()
     private var isMeasuring: Boolean = false // 측정 중인지 여부를 나타내는 플래그 변수
 
     var sensorintent: Intent? = null
@@ -26,22 +26,40 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
     private var wifiConnected: Boolean = true
     private var serverConnected: Boolean = true
 
-    fun wifiTest(){
-        val ping = Ping("https://dns.google/")
-        ping.start()
-        Log.d("와이파이 연결 테스트", ping.toString())
-        if (!ping.isSuccess()){
-            !wifiConnected
+    private val connectivityReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (!isNetworkConnected()) {
+                if (isMeasuring) {
+                    stopMeasurement()
+                    Toast.makeText(this@MenuActivity, "와이파이 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
-    fun serverTest(){
-        val ping = Ping(StaticResources.ServerURL)
+    private fun wifiTest() {
+        val ping = Ping("https://dns.google/")
         ping.start()
-        Log.d("서버 연결 테스트", ping.toString())
-        if (!ping.isSuccess()){
-            !serverConnected
+        try {
+            ping.join()
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
         }
+        Log.d("와이파이 연결 테스트", ping.toString())
+        wifiConnected = ping.isSuccess()
+    }
+
+    private fun serverTest() {
+        val ping = Ping(StaticResources.getHttpURL() + "api/watch")
+        ping.start()
+        try {
+            ping.join()
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
+        }
+        Log.d("서버 연결 테스트", ping.toString())
+        serverConnected = ping.isSuccess()
+        Log.d("서버 연결 테스트", serverConnected.toString())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,13 +82,22 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
         // 측정 시작 버튼 클릭 이벤트 등록
         startButton = findViewById(R.id.start)
         startButton.setOnClickListener(this)
+
+        // Register the connectivity receiver
+        registerReceiver(connectivityReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Unregister the connectivity receiver
+        unregisterReceiver(connectivityReceiver)
     }
 
     override fun onResume() {
         super.onResume()
-        var am:ActivityManager = applicationContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        for(rsi:RunningServiceInfo in am.getRunningServices(Integer.MAX_VALUE)) {
-            if(SensorService::class.java.name.equals(rsi.service.className)){
+        val am: ActivityManager = applicationContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (rsi: RunningServiceInfo in am.getRunningServices(Integer.MAX_VALUE)) {
+            if (SensorService::class.java.name == rsi.service.className) {
                 isMeasuring = true
                 startButton.text = "측정 중"
                 startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
@@ -92,7 +119,6 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
                 Log.d("MainActivity", "사용자 정보 버튼이 클릭되었습니다.")
                 val intent = Intent(this, UserMainActivity::class.java)
                 startActivity(intent)
-
             }
 
             R.id.server -> {
@@ -104,39 +130,47 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             R.id.start -> {
-                val startButton: Button = findViewById(R.id.start)
                 if (isMeasuring) {
                     Log.d("MainActivity", "측정 중지 버튼이 클릭되었습니다.")
                     // 측정 중일 때 버튼을 누르면 측정 중지하고 버튼 텍스트를 "측정 시작"으로 변경
-                    stopService(sensorintent)
-                    Toast.makeText(this, "측정이 종료되었습니다.", Toast.LENGTH_SHORT).show()
-                    startButton.text = "측정 시작"
-                    startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
-                    isMeasuring = false // 측정 중이 아님을 표시
+                    stopMeasurement()
                 } else {
-                    serverTest()
-                    wifiTest()
+                   // serverTest()
+                 //   wifiTest()
                     if (!wifiConnected) {
-                        // 서버에 연결되어 있지 않은 경우
                         Toast.makeText(this, "와이파이 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
-                    } else if (!serverConnected){
-                        // 서버에 연결되어 있지 않은 경우
+                    } else if (!serverConnected) {
                         Toast.makeText(this, "서버 연결을 확인해주세요.", Toast.LENGTH_SHORT).show()
                     } else {
                         Log.d("MainActivity", "측정 시작 버튼이 클릭되었습니다.")
-                        // 측정 시작 버튼 클릭 시 텍스트 변경
-                        startButton.text = "측정 중"
-                        startButton.setBackground(resources.getDrawable(R.drawable.measure_button))
-                        // SensorService 시작
-                        sensorintent?.action = "UPDATE_SENSORS"
-                        startService(sensorintent)
-                        // 토스트 메시지로 출력
-                        Toast.makeText(this, "측정을 시작합니다.", Toast.LENGTH_SHORT).show()
-                        isMeasuring = true // 측정 중임을 표시
+                        startMeasurement()
                     }
                 }
             }
-
         }
+    }
+
+    private fun startMeasurement() {
+        startButton.text = "측정 중"
+        startButton.setBackground(resources.getDrawable(R.drawable.measure_button))
+        sensorintent?.action = "UPDATE_SENSORS"
+        startService(sensorintent)
+        Toast.makeText(this, "측정을 시작합니다.", Toast.LENGTH_SHORT).show()
+        isMeasuring = true
+    }
+
+    private fun stopMeasurement() {
+        stopService(sensorintent)
+        Toast.makeText(this, "측정이 종료되었습니다.", Toast.LENGTH_SHORT).show()
+        startButton.text = "측정 시작"
+        startButton.setBackground(resources.getDrawable(R.drawable.rounded_button))
+        isMeasuring = false
+    }
+
+    private fun isNetworkConnected(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetwork ?: return false
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+        return networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
     }
 }

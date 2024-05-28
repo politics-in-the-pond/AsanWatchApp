@@ -25,8 +25,8 @@ class SensorSettingsActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var gyrohzButton: Button
     private lateinit var saveButton: Button
     private lateinit var resetButton: Button
-    private var acchz:Int = 3
-    private var gyrohz:Int = 3
+    private var acchz: Int = 30
+    private var gyrohz: Int = 30
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,14 +71,19 @@ class SensorSettingsActivity : AppCompatActivity(), View.OnClickListener {
                 hzInputDialog.setHint("값을 입력해주세요.")
                 hzInputDialog.setText(acchz.toString())
                 hzInputDialog.setTextColor(Color.WHITE)
-                hzInputDialog.setInputType(InputType.TYPE_CLASS_NUMBER);
+                hzInputDialog.setInputType(InputType.TYPE_CLASS_NUMBER)
                 hzInputDialog.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE))
                 val hzDialog = AlertDialog.Builder(this)
                     .setCustomTitle(text)
                     .setView(hzInputDialog)
                     .setPositiveButton("OK") { dialog, which ->
-                        acchz = hzInputDialog.text.toString().toInt()
-                        acchzButton.text = "가속도 센서 Hz : ${acchz.toString()}"
+                        val input = hzInputDialog.text.toString().toInt()
+                        if (input in 1..30) {
+                            acchz = input
+                            acchzButton.text = "가속도 센서 Hz : ${acchz.toString()}"
+                        } else {
+                            Toast.makeText(this, "가속도 센서 Hz는 1에서 30 사이여야 합니다.", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     .setNegativeButton("Cancel", null)
                     .create()
@@ -101,15 +106,19 @@ class SensorSettingsActivity : AppCompatActivity(), View.OnClickListener {
                 hzInputDialog.setHint("값을 입력해주세요.")
                 hzInputDialog.setText(gyrohz.toString())
                 hzInputDialog.setTextColor(Color.WHITE)
-                hzInputDialog.setInputType(InputType.TYPE_CLASS_NUMBER);
+                hzInputDialog.setInputType(InputType.TYPE_CLASS_NUMBER)
                 hzInputDialog.setBackgroundTintList(ColorStateList.valueOf(Color.WHITE))
                 val hzDialog = AlertDialog.Builder(this)
                     .setCustomTitle(text)
-                    .setTitle("자이로 센서 Hz 변환 값 입력")
                     .setView(hzInputDialog)
                     .setPositiveButton("OK") { dialog, which ->
-                        gyrohz = hzInputDialog.text.toString().toInt()
-                        gyrohzButton.text = "자이로 센서 Hz : ${gyrohz.toString()}"
+                        val input = hzInputDialog.text.toString().toInt()
+                        if (input in 1..30) {
+                            gyrohz = input
+                            gyrohzButton.text = "자이로 센서 Hz : ${gyrohz.toString()}"
+                        } else {
+                            Toast.makeText(this, "자이로 센서 Hz는 1에서 30 사이여야 합니다.", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     .setNegativeButton("Cancel", null)
                     .create()
@@ -142,8 +151,8 @@ class SensorSettingsActivity : AppCompatActivity(), View.OnClickListener {
             R.id.reset -> {
                 Log.d("SettingsMainActivity", "Reset 버튼이 클릭되었습니다.")
                 // Handle reset button click
-                loader.putSensorAcchz(3)
-                loader.putSensorGyro(3)
+                loader.putSensorAcchz(30)
+                loader.putSensorGyro(30)
                 loader.getSensorSettings()
                 acchz = StaticResources.acchz
                 gyrohz = StaticResources.gyrohz

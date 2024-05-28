@@ -1,18 +1,25 @@
 package com.example.asan_sensor.activities;
 
+import static android.Manifest.permission.ACCESS_BACKGROUND_LOCATION;
+
 import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -31,6 +38,7 @@ import com.example.asan_sensor.StaticResources;
 import com.example.asan_sensor.WatchForegroundService;
 import com.example.asan_sensor.databinding.ActivityMaintempBinding;
 import com.example.asan_sensor.dto.DeviceInfo;
+import com.example.asan_sensor.socket.WebSocketStompClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,6 +55,13 @@ public class MainActivity extends Activity {
     private ImageView network;
     private ImageView server;
     private ImageView bt;
+
+    private Handler handler;
+
+    private Runnable networkCheckRunnable;
+    private Runnable serverCheckRunnable;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,18 +87,52 @@ public class MainActivity extends Activity {
         sensorSettingsLoader.getSensorSettings();
         generalSettingsLoader.getGeneralSettings();
         getWatchid(deviceid);
+
+
+        handler = new Handler();
+        networkCheckRunnable = new Runnable() {
+            @Override
+            public void run() {
+                network_check();
+                handler.postDelayed(this, 10000); // 10초마다 네트워크 상태 확인
+            }
+        };
+        serverCheckRunnable = new Runnable() {
+            @Override
+            public void run() {
+                server_check();
+                handler.postDelayed(this, 10000); // 10초마다 서버 상태 확인
+            }
+        };
+
+        handler.post(networkCheckRunnable);
+        handler.post(serverCheckRunnable);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        network_check();
-        server_check();
+        handler.post(networkCheckRunnable);
+        handler.post(serverCheckRunnable);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(networkCheckRunnable);
+        handler.removeCallbacks(serverCheckRunnable);
+    }
+
+
+    public static String getApplicationName(Context context) {
+        return context.getApplicationInfo().loadLabel(context.getPackageManager()).toString();
     }
 
     protected void getPermission(){
         String[] permissions = {
-            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.BODY_SENSORS
+                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.BODY_SENSORS
+                ,Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.BLUETOOTH,Manifest.permission.BLUETOOTH_ADVERTISE,Manifest.permission.BLUETOOTH_ADMIN
         };
 
         ArrayList<String> notGranted = new ArrayList<String>();
@@ -92,11 +141,15 @@ public class MainActivity extends Activity {
                 notGranted.add(permission);
             }
         }
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+            if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_SCAN)!=PackageManager.PERMISSION_GRANTED){
+                notGranted.add(Manifest.permission.BLUETOOTH_SCAN);
+            }
+        }
 
         if(notGranted.size()>0)
             ActivityCompat.requestPermissions(this, notGranted.toArray(new String[notGranted.size()]), 29573);
     }
-
     protected void UIBind(){
         binding = ActivityMaintempBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -131,6 +184,9 @@ public class MainActivity extends Activity {
             if(ping.isSuccess()){
                 network.setImageResource(R.drawable.baseline_check_24);
             }
+            else{
+                network.setImageResource(R.drawable.baseline_close_24);
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -141,12 +197,14 @@ public class MainActivity extends Activity {
         deviceInfo.setDeviceID(StaticResources.deviceID);
         deviceInfo.setDevice(StaticResources.device);
         deviceInfo.setOs(StaticResources.os);
-        Ping ping = new Ping(StaticResources.ServerURL);
+        Ping ping = new Ping(StaticResources.getHttpURL() + "api/watch");
         ping.start();
         try{
             ping.join();
             if(ping.isSuccess()){
                 server.setImageResource(R.drawable.baseline_check_24);
+            }else{
+                server.setImageResource(R.drawable.baseline_close_24);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -156,7 +214,6 @@ public class MainActivity extends Activity {
     private void getWatchid(String deviceId) {
 
         String URL = StaticResources.getHttpURL() + "api/watch/"+deviceId;
-        Log.d("url", URL);
         JSONObject json_object = new JSONObject();
         try {
             json_object.put("androidId", deviceId);
@@ -180,7 +237,7 @@ public class MainActivity extends Activity {
                     String watchId = jsonResponse.getJSONObject("data").getString("watchId");
                     StaticResources.watchID = watchId;
                     server.setImageResource(R.drawable.baseline_check_24);
-                    Log.d("WatchId", "Received watchId: " + watchId);
+//                    Log.d("WatchId", "Received watchId: " + watchId);
                     deviceidText.setText(StaticResources.watchID);
                     Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
                     intent.putExtra("watchId", watchId);
@@ -243,7 +300,7 @@ public class MainActivity extends Activity {
                 int state = jsonResponse.getInt("status");
                 if (state == 200) {
                     String watchId = jsonResponse.getJSONObject("data").getString("watchId");
-                    Log.d("WatchId", "Received watchId: " + watchId);
+//                    Log.d("WatchId", "Received watchId: " + watchId);
                     Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
                     intent.putExtra("watchId", watchId);
                     startForegroundService(intent);

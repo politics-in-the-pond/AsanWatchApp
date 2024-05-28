@@ -7,6 +7,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.net.wifi.WifiManager
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.IBinder
 import android.util.Log
 import com.example.asan_sensor.socket.WebSocketStompClient
@@ -14,6 +16,7 @@ import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Date
+
 
 class SensorService : Service(), SensorEventListener {
 
@@ -27,6 +30,19 @@ class SensorService : Service(), SensorEventListener {
     private var acccheck = 0
     private var gyrocheck = 0
 
+    // Separate threads for each sensor type
+    private val heartRateThread = HandlerThread("HeartRateThread")
+    private val accelerometerThread = HandlerThread("AccelerometerThread")
+    private val lightThread = HandlerThread("LightThread")
+    private val gyroscopeThread = HandlerThread("GyroscopeThread")
+    private val pressureThread = HandlerThread("PressureThread")
+
+    private lateinit var heartRateHandler: Handler
+    private lateinit var accelerometerHandler: Handler
+    private lateinit var lightHandler: Handler
+    private lateinit var gyroscopeHandler: Handler
+    private lateinit var pressureHandler: Handler
+
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -35,11 +51,25 @@ class SensorService : Service(), SensorEventListener {
         super.onCreate()
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+
+        // Start handler threads
+        heartRateThread.start()
+        accelerometerThread.start()
+        lightThread.start()
+        gyroscopeThread.start()
+        pressureThread.start()
+
+        // Initialize handlers
+        heartRateHandler = Handler(heartRateThread.looper)
+        accelerometerHandler = Handler(accelerometerThread.looper)
+        lightHandler = Handler(lightThread.looper)
+        gyroscopeHandler = Handler(gyroscopeThread.looper)
+        pressureHandler = Handler(pressureThread.looper)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null && webSocketStompClient == null) {
-            this.watchId = intent.getStringExtra("watchId").toString();
+            this.watchId = intent.getStringExtra("watchId").toString()
             webSocketStompClient = WebSocketStompClient.getInstance(watchId)
         }
 
@@ -47,16 +77,31 @@ class SensorService : Service(), SensorEventListener {
         return START_STICKY
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        stopSensorMeasurement()
+        heartRateThread.quitSafely()
+        accelerometerThread.quitSafely()
+        lightThread.quitSafely()
+        gyroscopeThread.quitSafely()
+        pressureThread.quitSafely()
+    }
+
     override fun onSensorChanged(event: SensorEvent?) {
-        if (event != null) {
+        event?.let {
             val sensorType = event.sensor.type
             val sensorData = processSensorData(event)
-            Log.d("LOG", sensorType.toString() + " 측정")
-            if (sensorData != null) {
-                sendData(event, sensorType)
-            } else {
-                Log.e(TAG, "Failed to process sensor data.")
-            }
+//            Log.d("LOG", "$sensorType 측정")
+            sensorData?.let {
+                when (sensorType) {
+                    Sensor.TYPE_HEART_RATE -> heartRateHandler.post { sendData(event, sensorType) }
+                    Sensor.TYPE_ACCELEROMETER -> accelerometerHandler.post { sendData(event, sensorType) }
+                    Sensor.TYPE_LIGHT -> lightHandler.post { sendData(event, sensorType) }
+                    Sensor.TYPE_GYROSCOPE -> gyroscopeHandler.post { sendData(event, sensorType) }
+                    Sensor.TYPE_PRESSURE -> pressureHandler.post { sendData(event, sensorType) }
+                    else -> {}
+                }
+            } ?: Log.e(TAG, "Failed to process sensor data.")
         }
     }
 
@@ -91,93 +136,99 @@ class SensorService : Service(), SensorEventListener {
     }
 
     private fun sendData(sensorEvent: SensorEvent, sensorType: Int) {
-        Thread {
-            try {
-                // Create data objects based on sensor type
-                when (sensorType) {
-                    Sensor.TYPE_HEART_RATE -> {
-                        val result_json = JSONObject()
-                        result_json.put("value", sensorEvent.values[0])
-                        result_json.put("timeStamp", System.currentTimeMillis())
-                        webSocketStompClient?.sendHeartrate(result_json)
-                    }
-
-                    Sensor.TYPE_ACCELEROMETER -> {
-                        acccheck += 1
-                        acccheck %= 10000
-                        if(acccheck % 2 == 0) {
-                            var now: Date = Date()
-                            var nowTime: String = now.toString()
-                            //Log.d("acctime", nowTime)
-                            val result_json = JSONObject()
-                            result_json.put("accX", sensorEvent.values[0])
-                            result_json.put("accY", sensorEvent.values[1])
-                            result_json.put("accZ", sensorEvent.values[2])
-                            result_json.put("timeStamp", System.currentTimeMillis())
-                            webSocketStompClient?.sendAccelerometer(result_json)
-                        }
-                    }
-
-                    Sensor.TYPE_LIGHT -> {
-                        val result_json = JSONObject()
-                        result_json.put("value", sensorEvent.values[0])
-                        result_json.put("timeStamp", System.currentTimeMillis())
-                        webSocketStompClient?.sendLight(result_json)
-                    }
-
-                    Sensor.TYPE_GYROSCOPE -> {
-                        gyrocheck += 1
-                        gyrocheck %= 10000
-                        if(gyrocheck % 2 == 0) {
-                            val result_json = JSONObject()
-                            result_json.put("gyroX", sensorEvent.values[0])
-                            result_json.put("gyroY", sensorEvent.values[1])
-                            result_json.put("gyroZ", sensorEvent.values[2])
-                            result_json.put("timeStamp", System.currentTimeMillis())
-                            webSocketStompClient?.sendGyroscope(result_json)
-                        }
-                    }
-
-                    Sensor.TYPE_PRESSURE -> {
-                        val result_json = JSONObject()
-                        result_json.put("value", sensorEvent.values[0])
-                        result_json.put("timeStamp", System.currentTimeMillis())
-                        webSocketStompClient?.sendPressure(result_json)
-                    }
-
-                    else -> null
+        try {
+            // Create data objects based on sensor type
+            when (sensorType) {
+                Sensor.TYPE_HEART_RATE -> {
+                    val result_json = JSONObject()
+                    result_json.put("value", sensorEvent.values[0])
+                    result_json.put("timeStamp", System.currentTimeMillis())
+                    webSocketStompClient?.sendHeartrate(result_json)
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+
+                Sensor.TYPE_ACCELEROMETER -> {
+                    acccheck += 1
+                    acccheck %= 10000
+                    if (acccheck % 2 == 0) {
+                        val result_json = JSONObject()
+                        result_json.put("accX", sensorEvent.values[0])
+                        result_json.put("accY", sensorEvent.values[1])
+                        result_json.put("accZ", sensorEvent.values[2])
+                        result_json.put("timeStamp", System.currentTimeMillis())
+                        webSocketStompClient?.sendAccelerometer(result_json)
+                    }
+                }
+
+                Sensor.TYPE_LIGHT -> {
+                    val result_json = JSONObject()
+                    result_json.put("value", sensorEvent.values[0])
+                    result_json.put("timeStamp", System.currentTimeMillis())
+                    webSocketStompClient?.sendLight(result_json)
+                }
+
+                Sensor.TYPE_GYROSCOPE -> {
+                    gyrocheck += 1
+                    gyrocheck %= 10000
+                    if (gyrocheck % 2 == 0) {
+                        val result_json = JSONObject()
+                        result_json.put("gyroX", sensorEvent.values[0])
+                        result_json.put("gyroY", sensorEvent.values[1])
+                        result_json.put("gyroZ", sensorEvent.values[2])
+                        result_json.put("timeStamp", System.currentTimeMillis())
+                        webSocketStompClient?.sendGyroscope(result_json)
+                    }
+                }
+
+                Sensor.TYPE_PRESSURE -> {
+                    val result_json = JSONObject()
+                    result_json.put("value", sensorEvent.values[0])
+                    result_json.put("timeStamp", System.currentTimeMillis())
+                    webSocketStompClient?.sendPressure(result_json)
+                }
+
+                else -> null
             }
-        }.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun startSensorMeasurement() {
-        var sensorTypes = arrayOf(Sensor.TYPE_HEART_RATE, Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_LIGHT, Sensor.TYPE_GYROSCOPE, Sensor.TYPE_PRESSURE)
+        val sensorTypes = arrayOf(
+            Sensor.TYPE_HEART_RATE,
+            Sensor.TYPE_ACCELEROMETER,
+            Sensor.TYPE_LIGHT,
+            Sensor.TYPE_GYROSCOPE,
+            Sensor.TYPE_PRESSURE
+        )
         if (!isMeasuring) {
-            for(sensorTypeInt:Int in sensorTypes)
+            for (sensorTypeInt: Int in sensorTypes) {
                 // Check if the sensor type is valid
                 if (sensorTypeInt != -1) {
                     val sensor: Sensor? = sensorManager.getDefaultSensor(sensorTypeInt)
                     sensor?.let {
                         // Register listener for the sensor
-                        val samplingRateMsAcc = 1000 / StaticResources.acchz // Hz를 ms로 변환
-                        val samplingRateMsGyro = 1000 / StaticResources.gyrohz
+//                        val samplingRateMsAcc = 1000 / StaticResources.acchz // Hz를 ms로 변환
+//                        val samplingRateMsGyro = 1000 / StaticResources.gyrohz
                         // startSensorMeasurement() 메서드 내에서 각 센서의 측정 속도를 설정할 때, 가속도 센서와 자이로 센서에 대한 Hz 값을 사용하도록 변경합니다.
                         sensorManager.registerListener(
                             this,
                             it,
                             when (sensorTypeInt) {
+//                                Sensor.TYPE_HEART_RATE -> {
+//                                    300000 // 1Hz for heart rate
+//                                }
+
                                 Sensor.TYPE_ACCELEROMETER -> {
-                                    // samplingRateMsAcc
-                                    5000000
+                                    1000000 / StaticResources.acchz
+
+                                    //30000000
                                 }
                                 Sensor.TYPE_GYROSCOPE -> {
-                                    //samplingRateMsGyro
-                                    5000000
+                                    1000000 / StaticResources.acchz
+//                                    30000000
                                 }
-                                else -> 5000000 //SensorManager.SENSOR_DELAY_NORMAL
+                                else -> 1000000 / 3  //SensorManager.SENSOR_DELAY_NORMAL
                             }
                         )
                     } ?: run {
@@ -187,12 +238,12 @@ class SensorService : Service(), SensorEventListener {
                     Log.d("Failure 2", "지원되지 않는 센서 타입입니다.")
                 }
             }
-        isMeasuring = true
-
+            isMeasuring = true
+        }
     }
 
     fun stopSensorMeasurement() {
-        var sensorTypes = arrayOf(
+        val sensorTypes = arrayOf(
             Sensor.TYPE_HEART_RATE,
             Sensor.TYPE_ACCELEROMETER,
             Sensor.TYPE_LIGHT,
@@ -200,9 +251,8 @@ class SensorService : Service(), SensorEventListener {
             Sensor.TYPE_PRESSURE
         )
         if (isMeasuring) {
-            for (sensorTypeInt: Int in sensorTypes)
-
-            // Check if the sensor type is valid
+            for (sensorTypeInt: Int in sensorTypes) {
+                // Check if the sensor type is valid
                 if (sensorTypeInt != -1) {
                     val sensor: Sensor? = sensorManager.getDefaultSensor(sensorTypeInt)
                     sensor?.let {
@@ -213,12 +263,8 @@ class SensorService : Service(), SensorEventListener {
                 } else {
                     Log.d("Failure", "지원되지 않는 센서 타입입니다.")
                 }
-            isMeasuring = false
+                isMeasuring = false
+            }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        stopSensorMeasurement()
     }
 }

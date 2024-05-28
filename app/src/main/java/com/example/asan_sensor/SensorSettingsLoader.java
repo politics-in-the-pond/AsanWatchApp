@@ -6,8 +6,8 @@ import android.content.SharedPreferences;
 public class SensorSettingsLoader {
     SharedPreferences pref = StaticResources.maincontext.getSharedPreferences("sensor_settings", Context.MODE_PRIVATE);
     public void getSensorSettings(){
-        StaticResources.acchz = this.pref.getInt("acchz", 3);
-        StaticResources.gyrohz = this.pref.getInt("gyrohz", 3);
+        StaticResources.acchz = this.pref.getInt("acchz", 30);
+        StaticResources.gyrohz = this.pref.getInt("gyrohz", 30);
     }
 
     public void putSensorAcchz(int acchz){
