@@ -1,6 +1,6 @@
 package com.example.asan_sensor.activities;
 
-import static android.Manifest.permission.ACCESS_BACKGROUND_LOCATION;
+
 
 import android.Manifest;
 import android.app.Activity;
@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,6 +24,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.android.volley.BuildConfig;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -33,7 +35,9 @@ import com.android.volley.toolbox.Volley;
 import com.example.asan_sensor.Ping;
 import com.example.asan_sensor.R;
 import com.example.asan_sensor.GeneralSettingsLoader;
+import com.example.asan_sensor.SensorService;
 import com.example.asan_sensor.SensorSettingsLoader;
+import com.example.asan_sensor.SingletonForSensor;
 import com.example.asan_sensor.StaticResources;
 import com.example.asan_sensor.WatchForegroundService;
 import com.example.asan_sensor.databinding.ActivityMaintempBinding;
@@ -45,6 +49,8 @@ import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+
+import timber.log.Timber;
 
 public class MainActivity extends Activity {
 
@@ -62,7 +68,6 @@ public class MainActivity extends Activity {
     private Runnable serverCheckRunnable;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,10 +77,6 @@ public class MainActivity extends Activity {
         getPermission();
         bluetooth_check();
 
-        //foregroundService = new Intent(this, WatchForegroundService.class);
-        //foregroundService.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-        //foregroundService.setData(Uri.parse("package:" + getPackageName()));
-        //startForegroundService(foregroundService);
 
         String deviceid = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
         Log.d("Main", deviceid);
@@ -89,24 +90,29 @@ public class MainActivity extends Activity {
         getWatchid(deviceid);
 
 
+
+
+
         handler = new Handler();
         networkCheckRunnable = new Runnable() {
             @Override
             public void run() {
                 network_check();
-                handler.postDelayed(this, 10000); // 10초마다 네트워크 상태 확인
+                handler.postDelayed(this, 5000); // 10초마다 네트워크 상태 확인
             }
         };
         serverCheckRunnable = new Runnable() {
             @Override
             public void run() {
                 server_check();
-                handler.postDelayed(this, 10000); // 10초마다 서버 상태 확인
+                handler.postDelayed(this, 5000); // 10초마다 서버 상태 확인
             }
         };
 
         handler.post(networkCheckRunnable);
         handler.post(serverCheckRunnable);
+
+
     }
 
     @Override
@@ -123,6 +129,13 @@ public class MainActivity extends Activity {
         handler.removeCallbacks(serverCheckRunnable);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopMeasurement();
+    }
+
+
 
     public static String getApplicationName(Context context) {
         return context.getApplicationInfo().loadLabel(context.getPackageManager()).toString();
@@ -133,6 +146,7 @@ public class MainActivity extends Activity {
                 Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.BODY_SENSORS
                 ,Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.BLUETOOTH,Manifest.permission.BLUETOOTH_ADVERTISE,Manifest.permission.BLUETOOTH_ADMIN
+
         };
 
         ArrayList<String> notGranted = new ArrayList<String>();
@@ -144,6 +158,13 @@ public class MainActivity extends Activity {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
             if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.BLUETOOTH_SCAN)!=PackageManager.PERMISSION_GRANTED){
                 notGranted.add(Manifest.permission.BLUETOOTH_SCAN);
+            }
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // 포그라운드 위치 권한이 이미 있을 경우 백그라운드 위치 권한 요청
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                notGranted.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
             }
         }
 
@@ -235,13 +256,16 @@ public class MainActivity extends Activity {
                 int state = jsonResponse.getInt("status");
                 if (state == 200) {
                     String watchId = jsonResponse.getJSONObject("data").getString("watchId");
+                    Log.d("watchId",watchId);
                     StaticResources.watchID = watchId;
                     server.setImageResource(R.drawable.baseline_check_24);
-//                    Log.d("WatchId", "Received watchId: " + watchId);
                     deviceidText.setText(StaticResources.watchID);
-                    Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
-                    intent.putExtra("watchId", watchId);
-                    startForegroundService(intent);
+                    foregroundService = new Intent(this, WatchForegroundService.class);
+                    foregroundService.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                    foregroundService.setData(Uri.parse("package:" + getPackageName()));
+                    foregroundService.putExtra("watchId", watchId);
+                    startForegroundService(foregroundService);
+//                    startMeasurement();
                 }
 
             } catch (JSONException e) {
@@ -303,7 +327,7 @@ public class MainActivity extends Activity {
 //                    Log.d("WatchId", "Received watchId: " + watchId);
                     Intent intent = new Intent(getApplicationContext(), WatchForegroundService.class);
                     intent.putExtra("watchId", watchId);
-                    startForegroundService(intent);
+
                 }
 
             } catch (JSONException e) {
@@ -333,5 +357,16 @@ public class MainActivity extends Activity {
         };
 
         requestQueue.add(stringRequest);
+    }
+
+
+    private void startMeasurement() {
+        Intent sensorIntent = SingletonForSensor.getInstance(this).getSensorIntent();
+        startService(sensorIntent);
+    }
+
+    private void stopMeasurement() {
+        Intent sensorIntent = SingletonForSensor.getInstance(this).getSensorIntent();
+        stopService(sensorIntent);
     }
 }
