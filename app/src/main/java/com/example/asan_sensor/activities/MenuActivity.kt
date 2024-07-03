@@ -37,31 +37,6 @@ class MenuActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun wifiTest() {
-        val ping = Ping("https://dns.google/")
-        ping.start()
-        try {
-            ping.join()
-        } catch (e: InterruptedException) {
-            e.printStackTrace()
-        }
-        Log.d("와이파이 연결 테스트", ping.toString())
-        wifiConnected = ping.isSuccess()
-    }
-
-    private fun serverTest() {
-        val ping = Ping(StaticResources.getHttpURL() + "api/watch")
-        ping.start()
-        try {
-            ping.join()
-        } catch (e: InterruptedException) {
-            e.printStackTrace()
-        }
-        Log.d("서버 연결 테스트", ping.toString())
-        serverConnected = ping.isSuccess()
-        Log.d("서버 연결 테스트", serverConnected.toString())
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
