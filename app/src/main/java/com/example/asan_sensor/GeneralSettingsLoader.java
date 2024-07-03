@@ -6,8 +6,9 @@ import android.content.SharedPreferences;
 public class GeneralSettingsLoader {
     SharedPreferences pref = StaticResources.maincontext.getSharedPreferences("settings", Context.MODE_PRIVATE);
     public void getGeneralSettings(){
-        StaticResources.ServerURL = this.pref.getString("url", "210.102.178.186");
-        StaticResources.port = this.pref.getString("port", "8080");
+        StaticResources.ServerURL = this.pref.getString("url", StaticResources.ServerURL);
+//        StaticResources.ServerURL = this.pref.getString("url", "192.168.45.157");
+        StaticResources.port = this.pref.getString("port", StaticResources.port);
         StaticResources.password = this.pref.getString("pw", "242424");
     }
 
