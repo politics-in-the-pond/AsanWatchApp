@@ -1,27 +1,19 @@
 package com.example.asan_sensor;
 
 import android.annotation.SuppressLint;
-
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-
 import android.content.Context;
 import android.content.Intent;
-
 import android.os.Build;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.RemoteException;
-
 import android.util.Log;
-
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -33,6 +25,7 @@ import com.example.asan_sensor.activities.MainActivity;
 import com.example.asan_sensor.dto.BeaconSignal;
 import com.example.asan_sensor.dto.WatchItem;
 import com.example.asan_sensor.socket.WebSocketStompClient;
+import com.example.asan_sensor.socket.WebSocketStompClientForPosition;
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
@@ -44,66 +37,71 @@ import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class WatchForegroundService extends Service {
     String TAG = "WatchForegroundService";
-    private Context context;
     private PowerManager.WakeLock wakeLock;
     private BeaconManager beaconManager;
     boolean is_started = false;
-    private WebSocketStompClient webSocketStompClient;
+    private WebSocketStompClientForPosition webSocketStompClientForPosition = null;
+
+    private WebSocketStompClient webSocketStompClient = null;
 
     private String watchId = "";
-
     JSONObject one_beacon_json = new JSONObject();
     JSONObject result_json = new JSONObject();
-
     HashMap<String, ArrayList<Double>> accumulatedRssiData = new HashMap<>();
 
-    // HandlerThread and Handler for beacon scanning
-    private HandlerThread beaconScanThread;
-    private Handler beaconScanHandler;
+
+
+    private int scanCount = 0;
+    private final int MAX_SCAN_COUNT = 100;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("WatchForegroundService", "measure start");
         PowerManager pm = (PowerManager) getApplicationContext().getSystemService(POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK,
-                "bletrack::wakelock");
+        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "bletrack::wakelock");
+
+
         wakeLock.acquire();
         if (!is_started) {
-            try {
-                initBeaconManager();
-            } catch (RemoteException e) {
-                throw new RuntimeException(e);
-            }
+            initBeaconManager();
+            startBeaconScanning();
             foregroundNotification();
+            is_started = true;
         }
-        is_started = true;
 
-        if (intent != null && webSocketStompClient == null) {
+
+        if (intent != null && webSocketStompClientForPosition == null) {
             this.watchId = intent.getStringExtra("watchId");
+            webSocketStompClientForPosition = WebSocketStompClientForPosition.getInstance(watchId);
             webSocketStompClient = WebSocketStompClient.getInstance(watchId);
         }
 
         return START_STICKY;
+
+
+
     }
 
-    void initBeaconManager() throws RemoteException {
+    private void initBeaconManager() {
         beaconManager = BeaconManager.getInstanceForApplication(this);
+        beaconManager.getBeaconParsers().add(new BeaconParser()
+                .setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+        beaconManager.getBeaconParsers().add(new BeaconParser()
+                .setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
 
-        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
-        beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
-
-        beaconManager.setBackgroundScanPeriod(350);
+        beaconManager.setBackgroundScanPeriod(50);
         beaconManager.setBackgroundBetweenScanPeriod(0);
-        beaconManager.setForegroundScanPeriod(350);
-        beaconManager.setForegroundBetweenScanPeriod(0);
-        HashMap<String, Kalman> kalmanmap = new HashMap<>();
+        beaconManager.setForegroundScanPeriod(50);  // Set to 500ms, matching the broadcast period
+        beaconManager.setForegroundBetweenScanPeriod(0);  // Set to 500ms
+
+
 
         NotificationCompat.Builder builder;
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -112,13 +110,8 @@ public class WatchForegroundService extends Service {
 
         if (Build.VERSION.SDK_INT >= 26) {
             String CHANNEL_ID = "BLE_service_channel";
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
-                    "BLE Scanning",
-                    NotificationManager.IMPORTANCE_HIGH);
-
-            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
-                    .createNotificationChannel(channel);
-
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "BLE Scanning", NotificationManager.IMPORTANCE_HIGH);
+            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
             builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         } else {
             builder = new NotificationCompat.Builder(this);
@@ -127,76 +120,101 @@ public class WatchForegroundService extends Service {
         builder.setSmallIcon(R.drawable.baseline_pin_drop_24)
                 .setContentTitle("ASAN BLE")
                 .setContentIntent(pendingIntent);
-        beaconManager.addRangeNotifier(new RangeNotifier() {
 
-            private int scanCount = 0;
-            private final int MAX_SCAN_COUNT = 10;
-
-            @Override
-            public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
-                beaconScanHandler.post(() -> {
-//                    int size = beacons.size();
-//                    Log.d("BLE", Integer.toString(size));
-                    WatchItem watchitem = new WatchItem();
-                    for (Beacon beacon : beacons) {
-                        BeaconSignal tmp = new BeaconSignal();
-                        int rssi = beacon.getRssi();
-                        String address = beacon.getId1().toString() + "-" + beacon.getId2().toString() + "-" + beacon.getId3().toString();
-                        Kalman kalman = kalmanmap.getOrDefault(address, new Kalman((double) rssi));
-                        double frssi = kalman.do_calc((double) rssi);
-
-                        kalmanmap.put(address, kalman);
-                        accumulatedRssiData.putIfAbsent(address, new ArrayList<>());
-                        accumulatedRssiData.get(address).add(frssi);
-
-                        tmp.setRssi(frssi);
-                        tmp.setBLEaddress(address);
-                        watchitem.item.add(tmp);
-                    }
-
-                    scanCount++;
-
-                    if (scanCount >= MAX_SCAN_COUNT) {
-                        HashMap<String, Double> medianRssiMap = new HashMap<>();
-                        for (Map.Entry<String, ArrayList<Double>> entry : accumulatedRssiData.entrySet()) {
-                            List<Double> rssiValues = entry.getValue();
-                            Collections.sort(rssiValues);
-                            double medianValue = rssiValues.get(rssiValues.size() / 2);
-                            medianRssiMap.put(entry.getKey(), medianValue);
-                        }
-                        try {
-                            performBackgroundTask(medianRssiMap);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                        accumulatedRssiData.clear();
-                        scanCount = 0;
-                    }
-                });
-            }
-        });
         beaconManager.enableForegroundServiceScanning(builder.build(), 456);
         beaconManager.setEnableScheduledScanJobs(false);
+    }
+
+
+
+
+    private void startBeaconScanning() {
+        Log.d("check", "countasdasd");
         beaconManager.startRangingBeacons(new Region("myRangingUniqueId", null, null, null));
+        beaconManager.addRangeNotifier(new RangeNotifier() {
+            @Override
+            public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+                for (Beacon beacon : beacons) {
+                    processBeacon(beacon);
+                }
+
+                scanCount++;
+                if (scanCount >= MAX_SCAN_COUNT) {
+
+                    HashMap<String, Double> medianRssiMap = new HashMap<>();
+                    synchronized (accumulatedRssiData){
+                        for (Map.Entry<String, ArrayList<Double>> entry : accumulatedRssiData.entrySet()) {
+                            List<Double> rssiValues = entry.getValue();
+                            if(rssiValues.size() >= 7) {
+                                rssiValues.sort(Comparator.reverseOrder());
+                                System.out.println(entry.getKey() + "rssiValues = " + rssiValues);
+                                double medianValue = rssiValues.get(rssiValues.size() / 2);
+                                String key = entry.getKey();
+                                medianRssiMap.put(key, medianValue);
+                            }
+                        }}
+
+                    String maxRssiKey = null;
+                    double maxRssiValue = Double.NEGATIVE_INFINITY;
+                    for (Map.Entry<String, Double> entry : medianRssiMap.entrySet()) {
+                        if (entry.getValue() > maxRssiValue) {
+                            maxRssiValue = entry.getValue();
+                            maxRssiKey = entry.getKey();
+
+                        }
+                    }
+
+
+//                    System.out.println("maxRssiKey = " + maxRssiKey);
+                    if (maxRssiKey != null) {
+                        medianRssiMap.put(maxRssiKey, medianRssiMap.get(maxRssiKey) + 10);
+                    }
+                    try {
+                        performBackgroundTask(medianRssiMap);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    synchronized (accumulatedRssiData){
+                        accumulatedRssiData.clear();}
+                    scanCount = 0;
+                }
+            }
+        });
+    }
+
+
+
+    private void processBeacon(Beacon beacon) {
+        WatchItem watchitem = new WatchItem();
+        BeaconSignal tmp = new BeaconSignal();
+        HashMap<String, Kalman> kalmanmap = new HashMap<>();
+        int rssi = beacon.getRssi();
+        String address = beacon.getId3().toString();
+//        System.out.println("beacon.getId3().toString() = " + beacon.getId3().toString());
+        Kalman kalman = kalmanmap.getOrDefault(address, new Kalman((double) rssi));
+        assert kalman != null;
+        double frssi = kalman.do_calc((double) rssi);
+        kalmanmap.put(address, kalman);
+        synchronized (accumulatedRssiData){
+        accumulatedRssiData.putIfAbsent(address, new ArrayList<>());
+        accumulatedRssiData.get(address).add(frssi);
+        }
+        tmp.setRssi(frssi);
+        tmp.setBLEaddress(address);
+        watchitem.item.add(tmp);
     }
 
     @SuppressLint("ForegroundServiceType")
-    void foregroundNotification() { // foreground 실행 후 신호 전달 (안하면 앱 강제종료 됨)
+    void foregroundNotification() {
         NotificationCompat.Builder builder;
-
         Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         if (Build.VERSION.SDK_INT >= 26) {
             String CHANNEL_ID = "BLE_service_channel";
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
-                    "BLE Scanning",
-                    NotificationManager.IMPORTANCE_DEFAULT);
-
-            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
-                    .createNotificationChannel(channel);
-
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "BLE Scanning", NotificationManager.IMPORTANCE_DEFAULT);
+            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
             builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         } else {
             builder = new NotificationCompat.Builder(this);
@@ -231,32 +249,40 @@ public class WatchForegroundService extends Service {
 
         try {
             result_json.put("beacon_data", json_array);
-            result_json.put("android_id", watchId);
+            result_json.put("watchId", watchId); //여기 이름 변경해야함.
         } catch (JSONException e) {
             e.printStackTrace();
         }
         // 서버와 통신
-        webSocketStompClient.sendPositionData(result_json);
+
+
+        if(webSocketStompClientForPosition != null) {
+            webSocketStompClientForPosition.sendPositionData(result_json);
+        }
+
+
+
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        beaconScanThread = new HandlerThread("BeaconScanThread");
-        beaconScanThread.start();
-        beaconScanHandler = new Handler(beaconScanThread.getLooper());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (webSocketStompClientForPosition != null) {
+            webSocketStompClientForPosition.disconnect();
+        }
         if (webSocketStompClient != null) {
             webSocketStompClient.disconnect();
         }
+
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
         }
-        beaconScanThread.quitSafely();
+
     }
 
     private void sendNetworkRequest(String URL, JSONObject jsonData) {
